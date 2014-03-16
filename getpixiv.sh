@@ -33,8 +33,10 @@ AUTH=`curl -s -c pixiv.txt -F"mode=login" -F"pass=${pixpass}" -F"pixiv_id=${pixi
 for ((i=1;i<=$pagenum;i++))
 do
 wget --load-cookies=pixiv.txt "http://www.pixiv.net/member_illust.php?id=$athid&p=$i" -O - \
---referer="http://www.pixiv.net/"|pcregrep -o  -e 'http\:\/\/i\d{1,3}\.pixiv\.net\/img-inf\/img\/[^\"]+' \
--e 'http\:\/\/i\d{1,3}\.pixiv\.net\/img\d{1,3}\/img\/[^\"]+'|sed 's/_s\./\./' | sed 's/\?.*//'>> get.pixiv.txt
+--referer="http://www.pixiv.net/"|pcregrep -o  \
+-e 'http\:\/\/i\d{1,3}\.pixiv\.net\/img-inf\/img\/[^\"]+' \
+-e 'http\:\/\/i\d{1,3}\.pixiv\.net\/img\d{1,3}\/img\/[^\"]+'|sed 's/_s\./\./' | sed \
+'s/\?.*//'>> get.pixiv.txt
 done;
 
 # Отделяем новые хитрые ссылки
@@ -73,7 +75,8 @@ comm -2 -3 list1 list2|sort > list3
 
 for i in `cat list3`
 do
-wget "http://www.pixiv.net/member_illust.php?mode=manga&illust_id=$i&type=scroll" --load-cookies=pixiv.txt \
+wget "http://www.pixiv.net/member_illust.php?mode=manga&illust_id=$i&type=scroll" \
+--load-cookies=pixiv.txt \
 --referer="http://www.pixiv.net/" -O -|pcregrep --buffer-size=1M -o \
 -e "http\:\/\/i\d{1,3}\.pixiv\.net\/img\d{1,3}\/img\/[^(\'|\?|\")]+" \
 -e "http\:\/\/i\d{1,3}\.pixiv\.net\/img-inf\/img\/[^(\'|\?|\")]+"| sed -e 's/_p/_big_p/g' \
@@ -95,7 +98,8 @@ ls *.jpg *.png *.gif|grep big|sed 's/_big[^\.]*//g'|sed 's/\..*//g'|sort|uniq > 
 comm -2 -3 list3 list4|sort|uniq -u > list5
 for i in `cat list5`
 do
-wget "http://www.pixiv.net/member_illust.php?mode=manga&illust_id=$i&type=scroll" --load-cookies=pixiv.txt \
+wget "http://www.pixiv.net/member_illust.php?mode=manga&illust_id=$i&type=scroll" \
+--load-cookies=pixiv.txt \
 --referer="http://www.pixiv.net/" -O -|pcregrep --buffer-size=1M -o \
 -e "http\:\/\/i\d{1,3}\.pixiv\.net\/img\d{1,3}\/img\/[^(\'|\?|\")]+" \
 -e "http\:\/\/i\d{1,3}\.pixiv\.net\/img-inf\/img\/[^(\'|\?|\")]+" >> get.pixiv.albums.txt
