@@ -17,7 +17,8 @@ echo \[InternetShortcut\] > "$3.url"
 echo URL=http\:\/\/www.pixiv.net\/member_illust.php\?id=$1 >> "$3.url"
 
 # настройки
-# id художника (athid) берется из URL вида http://www.pixiv.net/member_illust.php?id=18530, где 18530 и есть искомый параметр.
+# id художника (athid) берется из URL вида http://www.pixiv.net/member_illust.php?id=18530,
+# где 18530 и есть искомый параметр.
 pixid=ЛОГИН
 pixpass=ПАРОЛЬ
 picnum=$2
@@ -25,12 +26,15 @@ let "pagenum=picnum/20+1"
 athid=$1
 
 # логинимся (куки в pixiv.txt)
-AUTH=`curl -s -c pixiv.txt -F"mode=login" -F"pass=${pixpass}" -F"pixiv_id=${pixid}" -F"skip=1" http://www.pixiv.net/index.php`
+AUTH=`curl -s -c pixiv.txt -F"mode=login" -F"pass=${pixpass}" -F"pixiv_id=${pixid}" \
+      -F"skip=1" http://www.pixiv.net/index.php`
 
 # качаем все страницы с картинками и парсим их на ходу
 for ((i=1;i<=$pagenum;i++))
 do
-wget --load-cookies=pixiv.txt "http://www.pixiv.net/member_illust.php?id=$athid&p=$i" -O - --referer="http://www.pixiv.net/"|pcregrep -o  -e 'http\:\/\/i\d{1,3}\.pixiv\.net\/img-inf\/img\/[^\"]+' -e 'http\:\/\/i\d{1,3}\.pixiv\.net\/img\d{1,3}\/img\/[^\"]+'|sed 's/_s\./\./' | sed 's/\?.*//'>> get.pixiv.txt
+wget --load-cookies=pixiv.txt "http://www.pixiv.net/member_illust.php?id=$athid&p=$i" -O - \
+--referer="http://www.pixiv.net/"|pcregrep -o  -e 'http\:\/\/i\d{1,3}\.pixiv\.net\/img-inf\/img\/[^\"]+' \
+-e 'http\:\/\/i\d{1,3}\.pixiv\.net\/img\d{1,3}\/img\/[^\"]+'|sed 's/_s\./\./' | sed 's/\?.*//'>> get.pixiv.txt
 done;
 
 # Отделяем новые хитрые ссылки
@@ -42,7 +46,9 @@ mv get.pixiv.txt.tmp get.pixiv.txt
 # Парсим "новые" типы ссылок
 for i in `cat get.pixiv.alt.txt`
 do
-wget "http://www.pixiv.net/member_illust.php?mode=big&illust_id=$i" --load-cookies=pixiv.txt --referer="http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$i" -O -|pcregrep -o  -e 'http\:\/\/i\d{1,3}\.pixiv\.net\/img\d{1,3}\/img\/[^\"]+' >> get.pixiv.txt
+wget "http://www.pixiv.net/member_illust.php?mode=big&illust_id=$i" --load-cookies=pixiv.txt \
+--referer="http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$i" -O -|pcregrep -o  \ 
+-e 'http\:\/\/i\d{1,3}\.pixiv\.net\/img\d{1,3}\/img\/[^\"]+' >> get.pixiv.txt
 done;
 
 # Чистка от левых дописок к имени файла
@@ -67,7 +73,11 @@ comm -2 -3 list1 list2|sort > list3
 
 for i in `cat list3`
 do
-wget "http://www.pixiv.net/member_illust.php?mode=manga&illust_id=$i&type=scroll" --load-cookies=pixiv.txt --referer="http://www.pixiv.net/" -O -|pcregrep --buffer-size=1M -o -e "http\:\/\/i\d{1,3}\.pixiv\.net\/img\d{1,3}\/img\/[^(\'|\?|\")]+" -e "http\:\/\/i\d{1,3}\.pixiv\.net\/img-inf\/img\/[^(\'|\?|\")]+"| sed -e 's/_p/_big_p/g' -e 's/\?.*//'>> get.pixiv.albums.txt
+wget "http://www.pixiv.net/member_illust.php?mode=manga&illust_id=$i&type=scroll" --load-cookies=pixiv.txt \
+--referer="http://www.pixiv.net/" -O -|pcregrep --buffer-size=1M -o \
+-e "http\:\/\/i\d{1,3}\.pixiv\.net\/img\d{1,3}\/img\/[^(\'|\?|\")]+" \
+-e "http\:\/\/i\d{1,3}\.pixiv\.net\/img-inf\/img\/[^(\'|\?|\")]+"| sed -e 's/_p/_big_p/g' \
+-e 's/\?.*//'>> get.pixiv.albums.txt
 done;
 
 # Чистка от мусора в выдаче
@@ -85,7 +95,10 @@ ls *.jpg *.png *.gif|grep big|sed 's/_big[^\.]*//g'|sed 's/\..*//g'|sort|uniq > 
 comm -2 -3 list3 list4|sort|uniq -u > list5
 for i in `cat list5`
 do
-wget "http://www.pixiv.net/member_illust.php?mode=manga&illust_id=$i&type=scroll" --load-cookies=pixiv.txt --referer="http://www.pixiv.net/" -O -|pcregrep --buffer-size=1M -o -e "http\:\/\/i\d{1,3}\.pixiv\.net\/img\d{1,3}\/img\/[^(\'|\?|\")]+" -e "http\:\/\/i\d{1,3}\.pixiv\.net\/img-inf\/img\/[^(\'|\?|\")]+" >> get.pixiv.albums.txt
+wget "http://www.pixiv.net/member_illust.php?mode=manga&illust_id=$i&type=scroll" --load-cookies=pixiv.txt \
+--referer="http://www.pixiv.net/" -O -|pcregrep --buffer-size=1M -o \
+-e "http\:\/\/i\d{1,3}\.pixiv\.net\/img\d{1,3}\/img\/[^(\'|\?|\")]+" \
+-e "http\:\/\/i\d{1,3}\.pixiv\.net\/img-inf\/img\/[^(\'|\?|\")]+" >> get.pixiv.albums.txt
 done;
 cat get.pixiv.albums.txt|grep -v '\/mobile\/'|sort|uniq > get.pixiv.albums.clean.txt
 mv get.pixiv.albums.clean.txt get.pixiv.albums.txt
