@@ -63,7 +63,8 @@ $dldr -i get.pixiv.txt --referer="http://www.pixiv.net/"
 
 # список id всего напарсеннго
 # list1 - список всех id
-cat get.pixiv.txt |sed 's/http\:\/\/i[^\/]*\/img[0-9]*\/img\/[^\/]*\///g'|sed 's/\..*//g'|sort|uniq > list1
+cat get.pixiv.txt |sed 's/http\:\/\/i[^\/]*\/img[0-9]*\/img\/[^\/]*\///g'|sed \
+'s/\..*//g'|sort|uniq > list1
 # список id всего из папки
 # list2 - список преобразованных имен файлов из папки без альбомов
 ls *.jpg *.png *.gif|grep -v _ |sed 's/\..*//g' > list2
