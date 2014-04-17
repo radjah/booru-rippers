@@ -26,7 +26,7 @@ let "pagenum=picnum/20+1"
 athid=$1
 
 # логинимся (куки в pixiv.txt)
-AUTH=`curl -s -c pixiv.txt -F"mode=login" -F"pass=${pixpass}" -F"pixiv_id=${pixid}" \
+AUTH=`curl -k -s -c pixiv.txt -F"mode=login" -F"pass=${pixpass}" -F"pixiv_id=${pixid}" \
       -F"skip=1" https://www.secure.pixiv.net/login.php`
 
 # качаем все страницы с картинками и парсим их на ходу
