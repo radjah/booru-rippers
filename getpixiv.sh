@@ -69,7 +69,6 @@ cat get.pixiv.txt |sed 's/http\:\/\/i[^\/]*\/img[0-9]*\/img\/[^\/]*\///g'|sed \
 # list2 - список преобразованных имен файлов из папки без альбомов
 ls *.jpg *.png *.gif|grep -v _ |sed 's/\..*//g' > list2
 # выводим id из первого файла, для которых нет файлов в папке
-# cat list1 list2|sort|uniq -u > list3
 comm -2 -3 list1 list2|sort > list3
 
 # list3 список недокаченного. Скорее всего альбомы
