@@ -17,8 +17,7 @@ echo \[InternetShortcut\] > "$3.url"
 echo URL=http\:\/\/www.pixiv.net\/member_illust.php\?id=$1 >> "$3.url"
 
 # настройки
-# id художника (athid) берется из URL вида http://www.pixiv.net/member_illust.php?id=18530,
-# где 18530 и есть искомый параметр.
+# id художника (athid) берется из URL вида http://www.pixiv.net/member_illust.php?id=18530, где 18530 и есть искомый параметр.
 pixid=ЛОГИН
 pixpass=ПАРОЛЬ
 picnum=$2
@@ -26,14 +25,13 @@ let "pagenum=picnum/20+1"
 athid=$1
 
 # логинимся (куки в pixiv.txt)
+# AUTH=`curl -s -c pixiv.txt -F"mode=login" -F"pass=${pixpass}" -F"pixiv_id=${pixid}" -F"skip=1" http://www.pixiv.net/index.php`
 AUTH=`curl -k -s -c pixiv.txt -F"mode=login" -F"pass=${pixpass}" -F"pixiv_id=${pixid}" -F"skip=1" https://www.secure.pixiv.net/login.php`
 
 # качаем все страницы с картинками и парсим их на ходу
 for ((i=1;i<=$pagenum;i++))
 do
-wget --load-cookies=pixiv.txt "http://www.pixiv.net/member_illust.php?id=$athid&p=$i" -O - --referer="http://www.pixiv.net/"|pcregrep -o  \
--e 'http\:\/\/i\d{1,3}\.pixiv\.net\/img-inf\/img\/[^\"]+' \
--e 'http\:\/\/i\d{1,3}\.pixiv\.net\/img\d{1,3}\/img\/[^\"]+'|sed 's/_s\./\./' | sed 's/\?.*//'>> get.pixiv.txt
+wget --load-cookies=pixiv.txt "http://www.pixiv.net/member_illust.php?id=$athid&p=$i" -O - --referer="http://www.pixiv.net/"|pcregrep -o  -e 'http\:\/\/i\d{1,3}\.pixiv\.net\/img-inf\/img\/[^\"]+' -e 'http\:\/\/i\d{1,3}\.pixiv\.net\/img\d{1,3}\/img\/[^\"]+'|sed 's/_s\./\./' | sed 's/\?.*//'>> get.pixiv.txt
 done;
 
 # Отделяем новые хитрые ссылки
@@ -61,8 +59,9 @@ $dldr -i get.pixiv.txt --referer="http://www.pixiv.net/"
 cat get.pixiv.txt |sed 's/http\:\/\/i[^\/]*\/img[0-9]*\/img\/[^\/]*\///g'|sed 's/\..*//g'|sort|uniq > list1
 # список id всего из папки
 # list2 - список преобразованных имен файлов из папки без альбомов
-ls *.jpg *.png *.gif|grep -v _ |sed 's/\..*//g' > list2
+ls *.jpg *.png *.gif|grep -v _ |sed 's/\..*//g'|sort > list2
 # выводим id из первого файла, для которых нет файлов в папке
+# cat list1 list2|sort|uniq -u > list3
 comm -2 -3 list1 list2|sort > list3
 
 # list3 список недокаченного. Скорее всего альбомы
