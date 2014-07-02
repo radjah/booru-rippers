@@ -31,12 +31,17 @@ AUTH=`curl -k -s -c pixiv.txt -F"mode=login" -F"pass=${pixpass}" -F"pixiv_id=${p
 # качаем все страницы с картинками и парсим их на ходу
 for ((i=1;i<=$pagenum;i++))
 do
-wget --load-cookies=pixiv.txt "http://www.pixiv.net/member_illust.php?id=$athid&p=$i" -O - --referer="http://www.pixiv.net/"|pcregrep -o  -e 'http\:\/\/i\d{1,3}\.pixiv\.net\/img-inf\/img\/[^\"]+' -e 'http\:\/\/i\d{1,3}\.pixiv\.net\/img\d{1,3}\/img\/[^\"]+'|sed 's/_s\./\./' | sed 's/\?.*//'>> get.pixiv.txt
+wget --load-cookies=pixiv.txt "http://www.pixiv.net/member_illust.php?id=$athid&p=$i" -O - --referer="http://www.pixiv.net/"|pcregrep -o  -e 'http\:\/\/i\d{1,3}\.pixiv\.net\/img-inf\/img\/[^\"]+' -e 'http\:\/\/i\d{1,3}\.pixiv\.net\/img\d{1,3}\/img\/[^\"]+'|sed 's/_s\./\./' | sed 's/\?.*//'>> get.pixiv.all.txt
 done;
 
-# Отделяем новые хитрые ссылки
-basename -a `cat get.pixiv.txt| grep img-inf`|sed 's/\..*//' > get.pixiv.alt.txt
-cat get.pixiv.txt | grep -v img-inf > get.pixiv.txt.tmp
+# Чистка от левых дописок к имени файла
+cat get.pixiv.all.txt| sed 's/\?.*//' > get.pixiv.all.txt.tmp
+mv get.pixiv.all.txt.tmp get.pixiv.all.txt
+
+# Отделяем новые хитрые ссылки и составляем список всех id работ
+basename -a `cat get.pixiv.all.txt| grep img-inf`|sed 's/\..*//' > get.pixiv.alt.txt
+basename -a `cat get.pixiv.all.txt`| sed 's/\..*//g'|sort > pixiv.allid.txt
+cat get.pixiv.all.txt | grep -v img-inf > get.pixiv.txt.tmp
 mv get.pixiv.txt.tmp get.pixiv.txt
 
 # Парсим страницы
@@ -49,6 +54,19 @@ done;
 # Чистка от левых дописок к имени файла
 cat get.pixiv.txt| sed 's/\?.*//' > get.pixiv.txt.tmp
 mv get.pixiv.txt.tmp get.pixiv.txt
+
+# Получаем id всего, что напарсили, кроме анимации
+basename -a `cat get.pixiv.txt`| sed 's/\..*//g'|sort > pixiv.dlid.txt
+comm -2 -3 pixiv.allid.txt pixiv.dlid.txt|sort > pixiv.animid.txt
+
+# Качаем анимацию
+
+for i in `cat get.pixiv.alt.txt`
+do
+wget "http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$i" --load-cookies=pixiv.txt --referer="http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$i" -O -|pcregrep --buffer-size=1M -o -e 'FullscreenData.+\.zip'|pcregrep -o -e 'http.+'|sed 's/\\//g' >> get.pixiv.anim.txt
+done;
+
+$dldr -i get.pixiv.anim.txt --referer="http://www.pixiv.net/"
 
 # качаем все картинки, которые нашли
 
