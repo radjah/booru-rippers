@@ -57,16 +57,15 @@ mv get.pixiv.txt.tmp get.pixiv.txt
 
 # Получаем id всего, что напарсили, кроме анимации
 basename -a `cat get.pixiv.txt`| sed 's/\..*//g'|sort > pixiv.dlid.txt
+# Выдергиваем id постов с анимацией
 comm -2 -3 pixiv.allid.txt pixiv.dlid.txt|sort > pixiv.animid.txt
 
 # Качаем анимацию
 
-for i in `cat get.pixiv.alt.txt`
+for i in `cat pixiv.animid.txt`
 do
 wget "http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$i" --load-cookies=pixiv.txt --referer="http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$i" -O -|pcregrep --buffer-size=1M -o -e 'FullscreenData.+\.zip'|pcregrep -o -e 'http.+'|sed 's/\\//g' >> get.pixiv.anim.txt
 done;
-
-$dldr -i get.pixiv.anim.txt --referer="http://www.pixiv.net/"
 
 # качаем все картинки, которые нашли
 
@@ -110,6 +109,19 @@ cat get.pixiv.albums.txt|grep -v '\/mobile\/'|sort|uniq > get.pixiv.albums.clean
 mv get.pixiv.albums.clean.txt get.pixiv.albums.txt
 $dldr -i get.pixiv.albums.txt --referer="http://www.pixiv.net/"
 
+# Добиваем анимацию
+
+# Список id посленего скаченного
+# list6 - список id скаченного в последнем проходе по альбомам
+basename -a `cat get.pixiv.albums.txt`|sed 's/_.*//g'|sort|uniq > list6
+comm -2 -3 list5 list6|sort > list7
+
+for i in `cat list7`
+do
+wget "http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$i" --load-cookies=pixiv.txt --referer="http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$i" -O -|pcregrep --buffer-size=1M -o -e 'FullscreenData.+\.zip'|pcregrep -o -e 'http.+'|sed 's/\\//g' >> get.pixiv.anim.txt
+done;
+$dldr -i get.pixiv.anim.txt --referer="http://www.pixiv.net/"
+
 # удаляем палево
 
-rm -f *.txt list*
+#rm -f *.txt list*
