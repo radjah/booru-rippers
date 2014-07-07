@@ -124,4 +124,4 @@ $dldr -i get.pixiv.anim.txt --referer="http://www.pixiv.net/"
 
 # удаляем палево
 
-#rm -f *.txt list*
+rm -f *.txt list*
