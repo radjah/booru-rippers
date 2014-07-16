@@ -83,44 +83,59 @@ comm -2 -3 list1 list2|sort > list3
 
 # list3 список недокаченного. Скорее всего альбомы
 
-for i in `cat list3`
-do
-wget "http://www.pixiv.net/member_illust.php?mode=manga&illust_id=$i&type=scroll" --load-cookies=pixiv.txt --referer="http://www.pixiv.net/" -O -|pcregrep --buffer-size=1M -o -e "http\:\/\/i\d{1,3}\.pixiv\.net\/img\d{1,3}\/img\/[^(\'|\?|\")]+" -e "http\:\/\/i\d{1,3}\.pixiv\.net\/img-inf\/img\/[^(\'|\?|\")]+"| sed -e 's/_p/_big_p/g' -e 's/\?.*//'>> get.pixiv.albums.txt
-done;
+if [ -s list3 ]
+then
+  for i in `cat list3`
+  do
+    wget "http://www.pixiv.net/member_illust.php?mode=manga&illust_id=$i&type=scroll" --load-cookies=pixiv.txt --referer="http://www.pixiv.net/" -O -|pcregrep --buffer-size=1M -o -e "http\:\/\/i\d{1,3}\.pixiv\.net\/img\d{1,3}\/img\/[^(\'|\?|\")]+" -e "http\:\/\/i\d{1,3}\.pixiv\.net\/img-inf\/img\/[^(\'|\?|\")]+"| sed -e 's/_p/_big_p/g' -e 's/\?.*//'>> get.pixiv.albums.txt
+  done;
+fi
 
 # Чистка от мусора в выдаче
-cat get.pixiv.albums.txt|grep -v '\/mobile\/'|sort|uniq > get.pixiv.albums.clean.txt
-mv get.pixiv.albums.clean.txt get.pixiv.albums.txt
 
-$dldr -i get.pixiv.albums.txt --referer="http://www.pixiv.net/"
-
-rm get.pixiv.albums.txt
+if [ -s get.pixiv.albums.txt ]
+then
+  cat get.pixiv.albums.txt|grep -v '\/mobile\/'|sort|uniq > get.pixiv.albums.clean.txt
+  mv get.pixiv.albums.clean.txt get.pixiv.albums.txt
+  $dldr -i get.pixiv.albums.txt --referer="http://www.pixiv.net/"
+  rm get.pixiv.albums.txt
+fi
 
 # Докачиваем альбомы без _big
 ls *.jpg *.png *.gif|grep big|sed 's/_big[^\.]*//g'|sed 's/\..*//g'|sort|uniq > list4
 # list4 - список преобразованных имен файлов из альбомов (id альбомов)
 
-comm -2 -3 list3 list4|sort|uniq -u > list5
-for i in `cat list5`
-do
-wget "http://www.pixiv.net/member_illust.php?mode=manga&illust_id=$i&type=scroll" --load-cookies=pixiv.txt --referer="http://www.pixiv.net/" -O -|pcregrep --buffer-size=1M -o -e "http\:\/\/i\d{1,3}\.pixiv\.net\/img\d{1,3}\/img\/[^(\'|\?|\")]+" -e "http\:\/\/i\d{1,3}\.pixiv\.net\/img-inf\/img\/[^(\'|\?|\")]+" >> get.pixiv.albums.txt
-done;
-cat get.pixiv.albums.txt|grep -v '\/mobile\/'|sort|uniq > get.pixiv.albums.clean.txt
-mv get.pixiv.albums.clean.txt get.pixiv.albums.txt
-$dldr -i get.pixiv.albums.txt --referer="http://www.pixiv.net/"
+if [ -s list4 ]
+then
+  comm -2 -3 list3 list4|sort|uniq -u > list5
+  for i in `cat list5`
+  do
+    wget "http://www.pixiv.net/member_illust.php?mode=manga&illust_id=$i&type=scroll" --load-cookies=pixiv.txt --referer="http://www.pixiv.net/" -O -|pcregrep --buffer-size=1M -o -e "http\:\/\/i\d{1,3}\.pixiv\.net\/img\d{1,3}\/img\/[^(\'|\?|\")]+" -e "http\:\/\/i\d{1,3}\.pixiv\.net\/img-inf\/img\/[^(\'|\?|\")]+" >> get.pixiv.albums.txt
+  done;
+  cat get.pixiv.albums.txt|grep -v '\/mobile\/'|sort|uniq > get.pixiv.albums.clean.txt
+  mv get.pixiv.albums.clean.txt get.pixiv.albums.txt
+  $dldr -i get.pixiv.albums.txt --referer="http://www.pixiv.net/"
+else
+  touch list5
+fi
 
 # Добиваем анимацию
 
 # Список id посленего скаченного
 # list6 - список id скаченного в последнем проходе по альбомам
-basename -a `cat get.pixiv.albums.txt`|sed 's/_.*//g'|sort|uniq > list6
-comm -2 -3 list5 list6|sort > list7
 
-for i in `cat list7`
-do
-wget "http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$i" --load-cookies=pixiv.txt --referer="http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$i" -O -|pcregrep --buffer-size=1M -o -e 'FullscreenData.+\.zip'|pcregrep -o -e 'http.+'|sed 's/\\//g' >> get.pixiv.anim.txt
-done;
+if [ -s get.pixiv.albums.txt ]
+then
+  basename -a `cat get.pixiv.albums.txt`|sed 's/_.*//g'|sort|uniq > list6
+  comm -2 -3 list5 list6|sort > list7
+
+  for i in `cat list7`
+  do
+    wget "http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$i" --load-cookies=pixiv.txt --referer="http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$i" -O -|pcregrep --buffer-size=1M -o -e 'FullscreenData.+\.zip'|pcregrep -o -e 'http.+'|sed 's/\\//g' >> get.pixiv.anim.txt
+  done;
 $dldr -i get.pixiv.anim.txt --referer="http://www.pixiv.net/"
+
+fi
 
 # удаляем палево
 
