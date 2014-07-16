@@ -117,6 +117,7 @@ then
   $dldr -i get.pixiv.albums.txt --referer="http://www.pixiv.net/"
 else
   touch list5
+  touch get.pixiv.albums.txt
 fi
 
 # Добиваем анимацию
