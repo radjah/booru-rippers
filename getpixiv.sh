@@ -112,12 +112,14 @@ then
   do
     wget "http://www.pixiv.net/member_illust.php?mode=manga&illust_id=$i&type=scroll" --load-cookies=pixiv.txt --referer="http://www.pixiv.net/" -O -|pcregrep --buffer-size=1M -o -e "http\:\/\/i\d{1,3}\.pixiv\.net\/img\d{1,3}\/img\/[^(\'|\?|\")]+" -e "http\:\/\/i\d{1,3}\.pixiv\.net\/img-inf\/img\/[^(\'|\?|\")]+" >> get.pixiv.albums.txt
   done;
-  cat get.pixiv.albums.txt|grep -v '\/mobile\/'|sort|uniq > get.pixiv.albums.clean.txt
-  mv get.pixiv.albums.clean.txt get.pixiv.albums.txt
-  $dldr -i get.pixiv.albums.txt --referer="http://www.pixiv.net/"
+  if [ -s get.pixiv.albums.txt ] 
+  then
+    cat get.pixiv.albums.txt|grep -v '\/mobile\/'|sort|uniq > get.pixiv.albums.clean.txt
+    mv get.pixiv.albums.clean.txt get.pixiv.albums.txt
+    $dldr -i get.pixiv.albums.txt --referer="http://www.pixiv.net/"
+  fi
 else
   touch list5
-  touch get.pixiv.albums.txt
 fi
 
 # Добиваем анимацию
