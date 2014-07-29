@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 
 dldr='aria2c --remote-time'
 dirlet=`echo $2|cut -c-1`
@@ -39,10 +39,6 @@ do
   fi
 done;
 
-# Чистка от левых дописок к имени файла
-cat get.pixiv.all.txt| sed 's/\?.*//' > get.pixiv.all.txt.tmp
-mv get.pixiv.all.txt.tmp get.pixiv.all.txt
-
 # Отделяем новые хитрые ссылки и составляем список всех id работ
 basename -a `cat get.pixiv.all.txt| grep img-inf`|sed 's/\..*//' > get.pixiv.alt.txt
 basename -a `cat get.pixiv.all.txt`| sed 's/\..*//g'|sort > pixiv.allid.txt
@@ -53,7 +49,7 @@ mv get.pixiv.txt.tmp get.pixiv.txt
 # Парсим "новые" типы ссылок
 for i in `cat get.pixiv.alt.txt`
 do
-wget "http://www.pixiv.net/member_illust.php?mode=big&illust_id=$i" --load-cookies=pixiv.txt --referer="http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$i" -O -|pcregrep -o  -e 'http\:\/\/i\d{1,3}\.pixiv\.net\/img\d{1,3}\/img\/[^\"]+' >> get.pixiv.txt
+  wget "http://www.pixiv.net/member_illust.php?mode=big&illust_id=$i" --load-cookies=pixiv.txt --referer="http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$i" -O -|pcregrep -o  -e 'http\:\/\/i\d{1,3}\.pixiv\.net\/img\d{1,3}\/img\/[^\"]+' >> get.pixiv.txt
 done;
 
 # Чистка от левых дописок к имени файла
@@ -69,7 +65,7 @@ comm -2 -3 pixiv.allid.txt pixiv.dlid.txt|sort > pixiv.animid.txt
 
 for i in `cat pixiv.animid.txt`
 do
-wget "http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$i" --load-cookies=pixiv.txt --referer="http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$i" -O -|pcregrep --buffer-size=1M -o -e 'FullscreenData.+\.zip'|pcregrep -o -e 'http.+'|sed 's/\\//g' >> get.pixiv.anim.txt
+  wget "http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$i" --load-cookies=pixiv.txt --referer="http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$i" -O -|pcregrep --buffer-size=1M -o -e 'FullscreenData.+\.zip'|pcregrep -o -e 'http.+'|sed 's/\\//g' >> get.pixiv.anim.txt
 done;
 
 # качаем все картинки, которые нашли
