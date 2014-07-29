@@ -25,7 +25,6 @@ let "pagenum=picnum/20+1"
 athid=$1
 
 # логинимся (куки в pixiv.txt)
-# AUTH=`curl -s -c pixiv.txt -F"mode=login" -F"pass=${pixpass}" -F"pixiv_id=${pixid}" -F"skip=1" http://www.pixiv.net/index.php`
 AUTH=`curl -k -s -c pixiv.txt -F"mode=login" -F"pass=${pixpass}" -F"pixiv_id=${pixid}" -F"skip=1" https://www.secure.pixiv.net/login.php`
 
 # качаем все страницы с картинками и парсим их на ходу
@@ -57,7 +56,7 @@ mv get.pixiv.txt.tmp get.pixiv.txt
 
 # Получаем id всего, что напарсили, кроме анимации
 basename -a `cat get.pixiv.txt`| sed 's/\..*//g'|sort > pixiv.dlid.txt
-# Выдергиваем id постов с анимацией
+# Выдергиваем id постов с анимацией, для них не нашли URL-картинок.
 comm -2 -3 pixiv.allid.txt pixiv.dlid.txt|sort > pixiv.animid.txt
 
 # Качаем анимацию
@@ -119,6 +118,7 @@ then
     $dldr -i get.pixiv.albums.txt --referer="http://www.pixiv.net/"
   fi
 else
+  # Чтобы comm не ругалась
   touch list5
 fi
 
@@ -136,10 +136,12 @@ then
   do
     wget "http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$i" --load-cookies=pixiv.txt --referer="http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$i" -O -|pcregrep --buffer-size=1M -o -e 'FullscreenData.+\.zip'|pcregrep -o -e 'http.+'|sed 's/\\//g' >> get.pixiv.anim.txt
   done;
-  if [ -s get.pixiv.anim.txt ] 
+fi
+
+# Докачиваем анимацию
+if [ -s get.pixiv.anim.txt ] 
   then
     $dldr -i get.pixiv.anim.txt --referer="http://www.pixiv.net/"
-  fi
 fi
 
 # удаляем палево
