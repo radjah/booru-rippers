@@ -1,36 +1,42 @@
 #! /bin/bash
 
 dldr='aria2c --remote-time'
-dirlet=`echo $3|cut -c-1`
-if [ ! -d ${dirlet,,}/$3 ]
+dirlet=`echo $2|cut -c-1`
+if [ ! -d ${dirlet,,}/$2 ]
 then
-echo Creating ${dirlet,,}/$3
-mkdir -p "${dirlet,,}/$3"
+echo Creating ${dirlet,,}/$2
+mkdir -p "${dirlet,,}/$2"
 else
 dldr='wget -nc'
 fi
-echo Entering ${dirlet,,}/$3
-cd ${dirlet,,}/$3
+echo Entering ${dirlet,,}/$2
+cd ${dirlet,,}/$2
 
 # ярлык на страницу автора
-echo \[InternetShortcut\] > "$3.url"
-echo URL=http\:\/\/www.pixiv.net\/member_illust.php\?id=$1 >> "$3.url"
+echo \[InternetShortcut\] > "$2.url"
+echo URL=http\:\/\/www.pixiv.net\/member_illust.php\?id=$1 >> "$2.url"
 
 # настройки
 # id художника (athid) берется из URL вида http://www.pixiv.net/member_illust.php?id=18530, где 18530 и есть искомый параметр.
 pixid=ЛОГИН
 pixpass=ПАРОЛЬ
-picnum=$2
-let "pagenum=picnum/20+1"
+picnum=1
+pagenum=1
 athid=$1
 
 # логинимся (куки в pixiv.txt)
 AUTH=`curl -k -s -c pixiv.txt -F"mode=login" -F"pass=${pixpass}" -F"pixiv_id=${pixid}" -F"skip=1" https://www.secure.pixiv.net/login.php`
 
 # качаем все страницы с картинками и парсим их на ходу
-for ((i=1;i<=$pagenum;i++))
+until [ $picnum -eq 0 ]
 do
-wget --load-cookies=pixiv.txt "http://www.pixiv.net/member_illust.php?id=$athid&p=$i" -O - --referer="http://www.pixiv.net/"|pcregrep -o  -e 'http\:\/\/i\d{1,3}\.pixiv\.net\/img-inf\/img\/[^\"]+' -e 'http\:\/\/i\d{1,3}\.pixiv\.net\/img\d{1,3}\/img\/[^\"]+'|sed 's/_s\./\./' | sed 's/\?.*//'>> get.pixiv.all.txt
+  wget --load-cookies=pixiv.txt "http://www.pixiv.net/member_illust.php?id=$athid&p=$pagenum" -O - --referer="http://www.pixiv.net/"|pcregrep -o  -e 'http\:\/\/i\d{1,3}\.pixiv\.net\/img-inf\/img\/[^\"]+' -e 'http\:\/\/i\d{1,3}\.pixiv\.net\/img\d{1,3}\/img\/[^\"]+'|sed 's/_s\./\./' | sed 's/\?.*//' > out.txt
+  picnum=`cat out.txt|wc -l`
+  if [ $picnum \> 0 ]
+  then
+    cat out.txt >> get.pixiv.all.txt
+    let "pagenum=pagenum+pagenum"
+  fi
 done;
 
 # Чистка от левых дописок к имени файла
@@ -77,7 +83,6 @@ cat get.pixiv.txt |sed 's/http\:\/\/i[^\/]*\/img[0-9]*\/img\/[^\/]*\///g'|sed 's
 # list2 - список преобразованных имен файлов из папки без альбомов
 ls *.jpg *.png *.gif|grep -v _ |sed 's/\..*//g'|sort > list2
 # выводим id из первого файла, для которых нет файлов в папке
-# cat list1 list2|sort|uniq -u > list3
 comm -2 -3 list1 list2|sort > list3
 
 # list3 список недокаченного. Скорее всего альбомы
