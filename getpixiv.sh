@@ -179,4 +179,4 @@ fi
 
 # удаляем палево
 
-rm -f *.txt list*
+rm -f *.txt list* out.txt
