@@ -60,19 +60,18 @@ done;
 # Отделяем новые хитрые ссылки и составляем список всех id работ
 # Вторая редация
 basename -a `cat get.pixiv.all.txt| grep img-inf`|sed 's/\..*//' > get.pixiv.alt.txt
-# Третья редакция
+# Третья редакция. basename может ругнуться
 basename -a `cat get.pixiv.all.txt| grep img-master\/img`|sed 's/\..*//' >> get.pixiv.alt.txt
 # id всех работ
 basename -a `cat get.pixiv.all.txt`| sed 's/\..*//g'|sort > pixiv.allid.txt
 # Первая редация
-cat get.pixiv.all.txt | grep -v img-inf|grep -v img-master\/img > get.pixiv.txt.tmp
-mv get.pixiv.txt.tmp get.pixiv.txt
+cat get.pixiv.all.txt | grep -v img-inf|grep -v img-master\/img > get.pixiv.txt
 
 # Парсим страницы
-# Парсим ссылки редация 2 и 3
+# Парсим ссылки редации 2 и 3
 for i in `cat get.pixiv.alt.txt`
 do
-  wget "http://www.pixiv.net/member_illust.php?mode=big&illust_id=$i" --load-cookies=pixiv.txt --referer="http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$i" -O -|pcregrep -o  -e 'http\:\/\/i\d{1,3}\.pixiv\.net\/img[^\"]+' >> get.pixiv.txt
+  wget "http://www.pixiv.net/member_illust.php?mode=big&illust_id=$i" --load-cookies=pixiv.txt --referer="http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$i" -O -|pcregrep -o  -e 'http\:\/\/i\d{1,3}\.pixiv\.net\/img[^\"]+'|grep -v ugoira >> get.pixiv.txt
 done;
 
 # Чистка от левых дописок к имени файла
@@ -179,4 +178,4 @@ fi
 
 # удаляем палево
 
-rm -f *.txt list* out.txt
+rm -f *.txt list* out.*
