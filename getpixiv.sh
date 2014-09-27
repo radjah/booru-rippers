@@ -53,7 +53,7 @@ do
     then
       cat out.new.txt >> out.new.all.txt
     fi
-    let "pagenum=pagenum+1"
+    let "pagenum++"
   fi
 done;
 
