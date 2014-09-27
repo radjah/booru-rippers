@@ -25,31 +25,54 @@ pagenum=1
 athid=$1
 
 # логинимся (куки в pixiv.txt)
+echo Logging in...
 AUTH=`curl -k -s -c pixiv.txt -F"mode=login" -F"pass=${pixpass}" -F"pixiv_id=${pixid}" -F"skip=1" https://www.secure.pixiv.net/login.php`
 
 # качаем все страницы с картинками и парсим их на ходу
+# out.new.id.txt для дальнейшей фильтрации
 until [ $picnum -eq 0 ]
 do
-  wget --load-cookies=pixiv.txt "http://www.pixiv.net/member_illust.php?id=$athid&p=$pagenum" -O - --referer="http://www.pixiv.net/"|pcregrep -o  -e 'http\:\/\/i\d{1,3}\.pixiv\.net\/img-inf\/img\/[^\"]+' -e 'http\:\/\/i\d{1,3}\.pixiv\.net\/img\d{1,3}\/img\/[^\"]+'|sed 's/_s\./\./' | sed 's/\?.*//' > out.txt
+  wget --load-cookies=pixiv.txt "http://www.pixiv.net/member_illust.php?id=$athid&p=$pagenum" -O - --referer="http://www.pixiv.net/" > out.dat
+  
+  # Самый старый формат
+  cat out.dat|pcregrep -o -e 'http\:\/\/i\d{1,3}\.pixiv\.net\/img\d{1,3}\/img\/[^\"]+' > out.int.txt
+  # Вторая редакция
+  cat out.dat|pcregrep -o -e 'http\:\/\/i\d{1,3}\.pixiv\.net\/img-inf\/img\/[^\"]+' >> out.int.txt
+  # Третья редакция (26.09.2014) Заканчивается на _p0
+  cat out.dat|pcregrep -o -e "http\:\/\/i\d{1,3}\.pixiv\.net.+img-master[^(\'|\?|\")]+" > out.new.txt
+  # Дописываем ко всем
+  cat out.new.txt >> out.int.txt
+  # Все вместе
+  cat out.int.txt|sed 's/_s\./\./' | sed 's/\?.*//' | sed 's/_p0_master1200\./\./g' > out.txt
+  # Сколько нашли на текущей странице?
   picnum=`cat out.txt|wc -l`
   if [ $picnum \> 0 ]
   then
     cat out.txt >> get.pixiv.all.txt
-    let "pagenum=pagenum+pagenum"
+    if [ -s out.new.txt ]
+    then
+      cat out.new.txt >> out.new.all.txt
+    fi
+    let "pagenum=pagenum+1"
   fi
 done;
 
 # Отделяем новые хитрые ссылки и составляем список всех id работ
+# Вторая редация
 basename -a `cat get.pixiv.all.txt| grep img-inf`|sed 's/\..*//' > get.pixiv.alt.txt
+# Третья редакция
+basename -a `cat get.pixiv.all.txt| grep img-master\/img`|sed 's/\..*//' >> get.pixiv.alt.txt
+# id всех работ
 basename -a `cat get.pixiv.all.txt`| sed 's/\..*//g'|sort > pixiv.allid.txt
-cat get.pixiv.all.txt | grep -v img-inf > get.pixiv.txt.tmp
+# Первая редация
+cat get.pixiv.all.txt | grep -v img-inf|grep -v img-master\/img > get.pixiv.txt.tmp
 mv get.pixiv.txt.tmp get.pixiv.txt
 
 # Парсим страницы
-# Парсим "новые" типы ссылок
+# Парсим ссылки редация 2 и 3
 for i in `cat get.pixiv.alt.txt`
 do
-  wget "http://www.pixiv.net/member_illust.php?mode=big&illust_id=$i" --load-cookies=pixiv.txt --referer="http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$i" -O -|pcregrep -o  -e 'http\:\/\/i\d{1,3}\.pixiv\.net\/img\d{1,3}\/img\/[^\"]+' >> get.pixiv.txt
+  wget "http://www.pixiv.net/member_illust.php?mode=big&illust_id=$i" --load-cookies=pixiv.txt --referer="http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$i" -O -|pcregrep -o  -e 'http\:\/\/i\d{1,3}\.pixiv\.net\/img[^\"]+' >> get.pixiv.txt
 done;
 
 # Чистка от левых дописок к имени файла
@@ -57,7 +80,7 @@ cat get.pixiv.txt| sed 's/\?.*//' > get.pixiv.txt.tmp
 mv get.pixiv.txt.tmp get.pixiv.txt
 
 # Получаем id всего, что напарсили, кроме анимации
-basename -a `cat get.pixiv.txt`| sed 's/\..*//g'|sort > pixiv.dlid.txt
+basename -a `cat get.pixiv.txt`| sed 's/\..*//g'| sed 's/\_p0//g'|sort > pixiv.dlid.txt
 # Выдергиваем id постов с анимацией, для них не нашли URL-картинок.
 comm -2 -3 pixiv.allid.txt pixiv.dlid.txt|sort > pixiv.animid.txt
 
@@ -74,10 +97,19 @@ $dldr -i get.pixiv.txt --referer="http://www.pixiv.net/"
 
 # список id всего напарсеннго
 # list1 - список всех id
-cat get.pixiv.txt |sed 's/http\:\/\/i[^\/]*\/img[0-9]*\/img\/[^\/]*\///g'|sed 's/\..*//g'|sort|uniq > list1
+basename -a `cat get.pixiv.txt`| sed 's/\..*//g'| sed 's/\_p0//g'|sort|uniq > list1
 # список id всего из папки
 # list2 - список преобразованных имен файлов из папки без альбомов
-ls *.jpg *.png *.gif|grep -v _ |sed 's/\..*//g'|sort > list2
+ls *.jpg *.png *.gif|grep -v _ |sed 's/\..*//g' > list2.tmp
+# Дописываем третью редакию
+# Отдельно id для третьей редакции
+if [ -s out.new.all.txt ]
+then
+  basename -a `cat out.new.all.txt`|sed 's/_p0_master1200\..*//g' > out.new.id.txt
+else
+  touch out.new.id.txt
+fi
+cat out.new.id.txt list2.tmp|sort|uniq > list2
 # выводим id из первого файла, для которых нет файлов в папке
 comm -2 -3 list1 list2|sort > list3
 
