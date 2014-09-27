@@ -39,7 +39,7 @@ do
   # Вторая редакция
   cat out.dat|pcregrep -o -e 'http\:\/\/i\d{1,3}\.pixiv\.net\/img-inf\/img\/[^\"]+' >> out.int.txt
   # Третья редакция (26.09.2014) Заканчивается на _p0
-  cat out.dat|pcregrep -o -e "http\:\/\/i\d{1,3}\.pixiv\.net.+img-master[^(\'|\?|\")]+" > out.new.txt
+  cat out.dat|pcregrep -o -e "http\:\/\/i\d{1,3}\.pixiv\.net\/c\/150x150\/img-master[^\"]+" > out.new.txt
   # Дописываем ко всем
   cat out.new.txt >> out.int.txt
   # Все вместе
