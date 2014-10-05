@@ -29,7 +29,7 @@ echo Logging in...
 AUTH=`curl -k -s -c pixiv.txt -F"mode=login" -F"pass=${pixpass}" -F"pixiv_id=${pixid}" -F"skip=1" https://www.secure.pixiv.net/login.php`
 
 # качаем все страницы с картинками и парсим их на ходу
-# out.new.id.txt для дальнейшей фильтрации
+# out.new.all.txt для дальнейшей фильтрации
 until [ $picnum -eq 0 ]
 do
   wget --load-cookies=pixiv.txt "http://www.pixiv.net/member_illust.php?id=$athid&p=$pagenum" -O - --referer="http://www.pixiv.net/" > out.dat
@@ -61,11 +61,22 @@ done;
 # Вторая редация
 basename -a `cat get.pixiv.all.txt| grep img-inf`|sed 's/\..*//' > get.pixiv.alt.txt
 # Третья редакция. basename может ругнуться
-basename -a `cat get.pixiv.all.txt| grep img-master\/img`|sed 's/\..*//' >> get.pixiv.alt.txt
+basename -a `cat get.pixiv.all.txt| grep img-master\/img`|sed 's/\..*//' > get.pixiv.new.txt
+cat get.pixiv.new.txt >> get.pixiv.alt.txt
 # id всех работ
 basename -a `cat get.pixiv.all.txt`| sed 's/\..*//g'|sort > pixiv.allid.txt
 # Первая редация
 cat get.pixiv.all.txt | grep -v img-inf|grep -v img-master\/img > get.pixiv.txt
+
+# Специальная обработка для третьей редакции
+# Сначала считаем все id альбомами
+
+for i in `cat get.pixiv.new.txt`
+do
+    wget "http://www.pixiv.net/member_illust.php?mode=manga&illust_id=$i&type=scroll" --load-cookies=pixiv.txt --referer="http://www.pixiv.net/" -O -|pcregrep --buffer-size=1M -o -e "http\:\/\/i\d{1,3}\.pixiv\.net\/c[^\"]+"| sed -e 's#c\/1200x1200\/img-master#img-original#g' -e 's/_master1200//'>> get.pixiv.albums.new.txt
+done;
+
+$dldr -i get.pixiv.albums.new.txt --referer="http://www.pixiv.net/"
 
 # Парсим страницы
 # Парсим ссылки редации 2 и 3
