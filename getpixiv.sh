@@ -78,6 +78,28 @@ done;
 
 $dldr -i get.pixiv.albums.new.txt --referer="http://www.pixiv.net/"
 
+# URL больших картинок могут не совпадать с маленькими
+# Отдельный парсер для таких случаев
+basename -a `cat get.pixiv.albums.new.txt`|sed 's#_.*##g'|uniq > get.pixiv.albums.bad.txt
+for i in `cat get.pixiv.albums.bad.txt`
+do
+  # Если файлов меньше двух (точно альбом, а не одиночная картинка)
+  if [ `ls $i*|wc -l` -le 2 ]
+    then
+      pagenum=0
+      picnum=1
+      # пока ни одной сслыки не будет найдено (страница с ошибкой)
+      until [ $picnum -eq 0 ]
+      do
+        wget "http://www.pixiv.net/member_illust.php?mode=manga_big&illust_id=$i&page=$pagenum"  --load-cookies=pixiv.txt --referer="http://www.pixiv.net/member_illust.php?mode=manga&illust_id=$i" -O out.dat
+        picnum=`cat out.dat|pcregrep -o  -e 'http\:\/\/i\d{1,3}\.pixiv\.net\/img[^\"]+'|grep -v ugoira|wc -l`
+        cat out.dat|pcregrep -o  -e 'http\:\/\/i\d{1,3}\.pixiv\.net\/img[^\"]+'|grep -v ugoira >> get.pixiv.albums.new.list.txt
+        let "pagenum++"
+      done;
+  fi
+done;
+
+$dldr -i get.pixiv.albums.new.list.txt --referer="http://www.pixiv.net/"
 # Парсим страницы
 # Парсим ссылки редации 2 и 3
 for i in `cat get.pixiv.alt.txt`
