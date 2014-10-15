@@ -99,7 +99,12 @@ do
   fi
 done;
 
-$dldr -i get.pixiv.albums.new.list.txt --referer="http://www.pixiv.net/"
+# качаем
+if [ -s get.pixiv.albums.new.list.txt ] 
+  then
+    $dldr -i get.pixiv.albums.new.list.txt --referer="http://www.pixiv.net/"
+fi
+
 # Парсим страницы
 # Парсим ссылки редации 2 и 3
 for i in `cat get.pixiv.alt.txt`
