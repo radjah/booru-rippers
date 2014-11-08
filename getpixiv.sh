@@ -173,10 +173,11 @@ fi
 # Докачиваем альбомы без _big
 ls *.jpg *.png *.gif|grep big|sed 's/_big[^\.]*//g'|sed 's/\..*//g'|sort|uniq > list4
 # list4 - список преобразованных имен файлов из альбомов (id альбомов)
+# list5 - список нескаченного
+comm -2 -3 list3 list4|sort|uniq -u > list5
 
-if [ -s list4 ]
+if [ -s list5 ]
 then
-  comm -2 -3 list3 list4|sort|uniq -u > list5
   for i in `cat list5`
   do
     wget "http://www.pixiv.net/member_illust.php?mode=manga&illust_id=$i&type=scroll" --load-cookies=pixiv.txt --referer="http://www.pixiv.net/" -O out.dat
@@ -219,4 +220,7 @@ fi
 
 # удаляем палево
 
-rm -f *.txt list* out.*
+if [ ! $3 ]
+then
+  rm -f *.txt list* out.*
+fi
