@@ -204,7 +204,7 @@ then
   for i in `cat get.pixiv.albums.bad.txt`
   do
     # Если файлов меньше одного, то альбом не скачался
-    if [ `ls $i*|wc -l` -le `cat get.pixiv.album.dl.new.txt|grep $i|wc -l` ]
+    if [ `ls $i*|wc -l` -lt `cat get.pixiv.album.dl.new.txt|grep $i|wc -l` ]
       then
         pagenum=0
         picnum=1
