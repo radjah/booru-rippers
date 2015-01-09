@@ -66,7 +66,7 @@ do
   # Все вместе
   cat out.int.txt|sed 's/_s\./\./' | sed 's/\?.*//' > out.txt
   # Сколько нашли на текущей странице?
-  picnum=`cat out.txt|wc -l`
+  picnum=`cat out.txt out.new.txt|wc -l`
   if [ $picnum \> 0 ]
   then
     cat out.txt >> get.pixiv.$2.txt
@@ -116,7 +116,7 @@ do
   fi
 done;
 
-# Здесь важны только id
+# Обрабатываем отфильтрованное
 for i in `cat get.pixiv.pics.alt.txt`
 do
   wget "http://www.pixiv.net/member_illust.php?mode=big&illust_id=$i" --load-cookies=pixiv.txt --referer="http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$i" -O -|pcregrep --buffer-size=1M -o -e 'http\:\/\/i\d{1,3}\.pixiv\.net\/img[^\"]+' >> get.pixiv.pics.dl.txt
@@ -204,7 +204,7 @@ then
   for i in `cat get.pixiv.albums.bad.txt`
   do
     # Если файлов меньше одного, то альбом не скачался
-    if [ `ls $i*|wc -l` -le 1 ]
+    if [ `ls $i*|wc -l` -le `cat get.pixiv.album.dl.new.txt|grep $i|wc -l` ]
       then
         pagenum=0
         picnum=1
