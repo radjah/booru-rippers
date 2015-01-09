@@ -125,7 +125,8 @@ done;
 # Скачивание
 if [ -s get.pixiv.pics.dl.txt ] 
 then
-  $dldr -i get.pixiv.pics.dl.txt --referer="http://www.pixiv.net/"
+  cat get.pixiv.pics.dl.txt| sed 's/\?.*//'  > get.pixiv.pics.clean.txt
+  $dldr -i get.pixiv.pics.clean.txt --referer="http://www.pixiv.net/"
 fi
 
 ###########################
