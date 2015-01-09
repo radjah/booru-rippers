@@ -11,7 +11,7 @@ then
   echo Каталог для сохранения не указан.
   if [ "$1" = "" ]
   then
-    echo ID ходжника не указан.
+    echo ID худжника не указан.
   fi
   printhelp
   exit 1
