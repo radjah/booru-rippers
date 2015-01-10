@@ -169,7 +169,7 @@ ls *.jpg *.png *.gif|grep big|sed 's/_big[^\.]*//g'|sed 's/\..*//g'|sort|uniq > 
 # get.pixiv.album.small.txt    - список нескаченного
 
 cat get.pixiv.album.alt.txt|sort > get.pixiv.album.sort.alt.txt
-comm -2 -3 get.pixiv.album.dld.txt get.pixiv.album.sort.alt.txt|sort|uniq -u > get.pixiv.album.small.txt
+comm -2 -3 get.pixiv.album.sort.alt.txt get.pixiv.album.dld.txt|sort|uniq -u > get.pixiv.album.small.txt
 
 if [ -s get.pixiv.album.small.txt ]
 then
