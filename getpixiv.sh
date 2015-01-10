@@ -224,6 +224,8 @@ then
           cat out.dat|pcregrep -o  -e 'http\:\/\/i\d{1,3}\.pixiv\.net\/img[^\"]+' >> get.pixiv.albums.new.list.txt
           let "pagenum++"
         done;
+    else
+      echo [*] $i already downloaded.
     fi
   done;
   if [ -s get.pixiv.albums.new.list.txt ] 
