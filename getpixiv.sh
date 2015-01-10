@@ -120,8 +120,8 @@ do
 done;
 
 # Сортируем и вычленяем настоящие альбомы.
-cat get.pixiv.album.new.txt| sort > get.pixiv.album.new.sort.txt
-cat get.pixiv.pics.alt.txt| sort > get.pixiv.pics.alt.sort.txt
+cat get.pixiv.album.new.txt|sort|uniq > get.pixiv.album.new.sort.txt
+cat get.pixiv.pics.alt.txt|sort > get.pixiv.pics.alt.sort.txt
 comm -2 -3 get.pixiv.album.new.sort.txt get.pixiv.pics.alt.sort.txt > get.pixiv.album.new.txt
 
 # Обрабатываем отфильтрованное
