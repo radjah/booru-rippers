@@ -104,17 +104,25 @@ getlist ugoira anim
 #########################
 
 # Отделяем альбомы от одиночных изображений. Актуально для новых ссылок.
+# И костылик для альбомов, которые в категории "Манга", но на самом деле одиночные изображения
 
-for i in `cat get.pixiv.pics.new.txt`
+for i in `cat get.pixiv.pics.new.txt get.pixiv.album.new.txt`
 do
   ismanga=`wget --load-cookies=pixiv.txt "http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$i" -O - --referer="http://www.pixiv.net/"|pcregrep --buffer-size=1M  -o -e 'mode=manga[^\"]+'|wc -l`
   if [ $ismanga -gt 0 ]
   then
     echo $i >> get.pixiv.album.new.txt
+    echo [*] $i is album
   else
     echo $i >> get.pixiv.pics.alt.txt
+    echo [*] $i is single image
   fi
 done;
+
+# Сортируем и вычленяем настоящие альбомы.
+cat get.pixiv.album.new.txt| sort > get.pixiv.album.new.sort.txt
+cat get.pixiv.pics.alt.txt| sort > get.pixiv.pics.alt.sort.txt
+comm -2 -3 get.pixiv.album.new.sort.txt get.pixiv.pics.alt.sort.txt > get.pixiv.album.new.txt
 
 # Обрабатываем отфильтрованное
 for i in `cat get.pixiv.pics.alt.txt`
