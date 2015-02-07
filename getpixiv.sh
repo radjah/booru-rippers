@@ -11,7 +11,7 @@ then
   echo Каталог для сохранения не указан.
   if [ "$1" = "" ]
   then
-    echo ID худжника не указан.
+    echo ID художника не указан.
   fi
   printhelp
   exit 1
@@ -149,7 +149,7 @@ if [ -s get.pixiv.album.alt.txt ]
 then
   for i in `cat get.pixiv.album.alt.txt`
   do
-    wget "http://www.pixiv.net/member_illust.php?mode=manga&illust_id=$i&type=scroll" --load-cookies=pixiv.txt --referer="http://www.pixiv.net/" -O -|pcregrep --buffer-size=1M -o -e "http\:\/\/i\d{1,3}\.pixiv\.net\/img\d{1,3}\/img\/[^(\'|\?|\")]+" -e "http\:\/\/i\d{1,3}\.pixiv\.net\/img-inf\/img\/[^(\'|\?|\")]+"| sed -e 's/_p/_big_p/g' -e 's/\?.*//'>> get.pixiv.album.dl.alt.txt
+    wget "http://www.pixiv.net/member_illust.php?mode=manga&illust_id=$i&type=scroll" --load-cookies=pixiv.txt --referer="http://www.pixiv.net/" -O -|pcregrep --buffer-size=1M -o -e "http\:\/\/i\d{1,3}\.pixiv\.net\/img\d{1,3}\/img\/[^(\'|\?|\")]+" -e "http\:\/\/i\d{1,3}\.pixiv\.net\/img-inf\/img\/[^(\'|\?|\")]+"| sed -e 's/\?.*//'>> get.pixiv.album.dl.alt.txt
   done;
 fi
 
@@ -158,6 +158,11 @@ if [ -s get.pixiv.album.dl.alt.txt ]
 then
   cat get.pixiv.album.dl.alt.txt|grep -v '\/mobile\/'|sort|uniq > get.pixiv.album.dl.clean.txt
   mv get.pixiv.album.dl.clean.txt get.pixiv.album.dl.alt.txt
+  # Костыль для обхода  _p в именах юзеров
+  dirname `cat get.pixiv.album.dl.alt.txt` > get.pixiv.album.dl.alt.dir.txt
+  basename -a `cat get.pixiv.album.dl.alt.txt`|sed -e 's/_p/_big_p/g' > get.pixiv.album.dl.alt.fn.txt
+  paste -d "/" get.pixiv.album.dl.alt.dir.txt get.pixiv.album.dl.alt.fn.txt|sort > get.pixiv.album.dl.alt.txt
+  # Закачка
   $dldr -i get.pixiv.album.dl.alt.txt --referer="http://www.pixiv.net/"
 fi
 
