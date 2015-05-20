@@ -84,7 +84,7 @@ touch get.pixiv.$2.txt get.pixiv.$2.alt.txt get.pixiv.$2.new.txt
 if [ -s get.pixiv.$2.txt ]
 then
   # Отделяем вторую редакцию от всего списка
-  basename -a `cat get.pixiv.$2.txt| grep img-inf`|sed 's/\..*//' > get.pixiv.$2.alt.txt
+  basename -a `cat get.pixiv.$2.txt| grep img-inf`|sed 's/\..*//'| sed 's/-.*//g'| sed 's/-.*//g' > get.pixiv.$2.alt.txt
 fi
 
 if [ -s out.new.$2.txt ]
