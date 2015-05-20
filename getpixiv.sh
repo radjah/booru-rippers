@@ -90,7 +90,7 @@ fi
 if [ -s out.new.$2.txt ]
 then
   # Третья редакция. basename может ругнуться
-  basename -a `cat out.new.$2.txt`|sed 's/\..*//'| sed 's/_p0_master1200//g' > get.pixiv.$2.new.txt
+  basename -a `cat out.new.$2.txt`|sed 's/\..*//'| sed 's/_p0_master1200//g'| sed 's/-.*//g' > get.pixiv.$2.new.txt
 fi
 
 }
@@ -213,7 +213,7 @@ fi
 # Отдельный парсер для таких случаев
 if [ -s get.pixiv.album.dl.new.txt ]
 then
-  basename -a `cat get.pixiv.album.dl.new.txt`|sed 's#_.*##g'|uniq > get.pixiv.albums.bad.txt
+  basename -a `cat get.pixiv.album.dl.new.txt`|sed -e 's#_.*##g' -e 's/-.*//g' |uniq > get.pixiv.albums.bad.txt
   for i in `cat get.pixiv.albums.bad.txt`
   do
     # Если файлов меньше одного, то альбом не скачался
