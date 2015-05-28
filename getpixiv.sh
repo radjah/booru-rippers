@@ -40,6 +40,16 @@ athid=$1
 echo Logging in...
 AUTH=`curl -k -s -c pixiv.txt -F"mode=login" -F"pass=${pixpass}" -F"pixiv_id=${pixid}" -F"skip=1" https://www.secure.pixiv.net/login.php`
 
+# Проверка логина
+checklog=`cat pixiv.txt |grep device_token|wc -l`
+if [ $checklog -eq 0 ]
+then
+  echo ERROR: Проверьте логин и пароль
+  exit 2
+else
+  echo OK
+fi
+
 # функция для получения списков
 getlist () {
 
@@ -79,7 +89,7 @@ touch get.pixiv.$2.txt get.pixiv.$2.alt.txt get.pixiv.$2.new.txt
 if [ -s get.pixiv.$2.txt ]
 then
   # Отделяем вторую редакцию от всего списка
-  basename -a `cat get.pixiv.$2.txt| grep img-inf`|sed 's/\..*//'| sed 's/-.*//g'| sed 's/-.*//g' > get.pixiv.$2.alt.txt
+  basename -a `cat get.pixiv.$2.txt| grep img-inf`|sed 's/\..*//'| sed 's/-.*//g' > get.pixiv.$2.alt.txt
 fi
 
 if [ -s out.new.$2.txt ]
@@ -244,7 +254,12 @@ if [ -s get.pixiv.anim.txt ]
 then
   for i in `cat get.pixiv.anim.alt.txt get.pixiv.anim.new.txt`
   do
-    wget "http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$i" --load-cookies=pixiv.txt --referer="http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$i" -O -|pcregrep --buffer-size=1M -o -e 'FullscreenData.+?\.zip'|pcregrep -o -e 'http.+'|sed 's/\\//g' >> get.pixiv.anim.dl.txt
+    # Получение страницы
+    wget "http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$i" --load-cookies=pixiv.txt --referer="http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$i" -O out.ugo
+    # Получение ссылки
+    cat out.ugo|pcregrep --buffer-size=1M -o -e 'FullscreenData.+?\.zip'|pcregrep -o -e 'http.+'|sed 's/\\//g' >> get.pixiv.anim.dl.txt
+    # Сохранение информации для анимацией
+    cat out.ugo|pcregrep --buffer-size=1M -o -e 'ugokuIllustFullscreenData.*\}\]\}'|pcregrep -o -e 'frames.*\}\]\}'|sed -e 's#},{#\n#g' -e 's/frames\"\:\[{//g' -e 's/\}\]\}//g' > ${i}_ugoira1920x1080.txt
   done;
 fi
 
@@ -258,5 +273,5 @@ fi
 
 if [ ! $3 ]
 then
-  rm -f *.txt list* out.*
+  rm -f get*.txt pixiv.txt list* out.*
 fi
