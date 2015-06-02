@@ -37,6 +37,8 @@ pixpass=ПАРОЛЬ
 athid=$1
 
 # логинимся (куки в pixiv.txt)
+
+pixlogin () {
 echo Logging in...
 AUTH=`curl -k -s -c pixiv.txt -F"mode=login" -F"pass=${pixpass}" -F"pixiv_id=${pixid}" -F"skip=1" https://www.secure.pixiv.net/login.php`
 
@@ -45,10 +47,12 @@ checklog=`cat pixiv.txt |grep device_token|wc -l`
 if [ $checklog -eq 0 ]
 then
   echo ERROR: Проверьте логин и пароль
+  rm pixiv.txt
   exit 2
 else
   echo OK
 fi
+}
 
 # функция для получения списков
 getlist () {
@@ -98,15 +102,21 @@ then
   basename -a `cat out.new.$2.txt`|sed 's/\..*//'| sed 's/_p0_master1200//g'| sed 's/-.*//g' > get.pixiv.$2.new.txt
 fi
 
-}
+} # getlist
 
-getlist illust pics
-getlist manga album
-getlist ugoira anim
+# удаляем мусор
+rmtrash () {
+if [ ! $3 ]
+then
+  rm -f get*.txt pixiv.txt list* out.*
+fi
+} # rmtrash
 
 #########################
 # Одиночные изображения #
 #########################
+
+procsingle () {
 
 # Отделяем альбомы от одиночных изображений. Актуально для новых ссылок.
 # И костылик для альбомов, которые в категории "Манга", но на самом деле одиночные изображения
@@ -142,6 +152,8 @@ then
   $dldr -i get.pixiv.pics.clean.txt --referer="http://www.pixiv.net/"
 fi
 
+} # procsingle
+
 ###########################
 # Альбомы с изображениями #
 ###########################
@@ -149,6 +161,8 @@ fi
 #############################
 # Обработка старых альбомов #
 #############################
+
+procoldalbums () {
 
 if [ -s get.pixiv.album.alt.txt ]
 then
@@ -198,9 +212,13 @@ then
   fi
 fi
 
+} # procoldalbums
+
 ############################
 # Обработка новых альбомов #
 ############################
+
+procnewalbums () {
 
 if [ -s get.pixiv.album.new.txt ]
 then
@@ -244,10 +262,13 @@ then
   fi
 fi
 
+} # procnewalbums
 
 ######################
 # Архивы с анимацией #
 ######################
+
+procanim () {
 
 # Здесь важны только id
 if [ -s get.pixiv.anim.txt ]
@@ -269,9 +290,29 @@ then
   $dldr -i get.pixiv.anim.dl.txt --referer="http://www.pixiv.net/"
 fi
 
-# удаляем мусор
+} # procanim
 
-if [ ! $3 ]
-then
-  rm -f get*.txt pixiv.txt list* out.*
-fi
+# Обработка всего и вся
+
+# очистка в любом случае
+trap rmtrash 1 2 3 15
+
+pixlogin
+echo [*] Building illust list...
+getlist illust pics
+echo [*] Building albums list...
+getlist manga album
+echo [*] Building animation list...
+getlist ugoira anim
+echo [*] Processing illust list...
+procsingle
+echo [*] Processing albums list...
+echo [*] 1/2 old
+procoldalbums
+echo [*] 2/2 new
+procnewalbums
+echo [*] Processing animation list...
+procanim
+echo [*] Removing trash...
+rmtrash
+echo [*] FINISHED!
