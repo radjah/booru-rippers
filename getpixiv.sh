@@ -26,19 +26,27 @@ fi
 echo Entering ${dirlet,,}/$2
 cd ${dirlet,,}/$2
 
-# ярлык на страницу автора
-echo \[InternetShortcut\] > "$2.url"
-echo URL=http\:\/\/www.pixiv.net\/member_illust.php\?id=$1 >> "$2.url"
-
 # настройки
 # id художника (athid) берется из URL вида http://www.pixiv.net/member_illust.php?id=18530, где 18530 и есть искомый параметр.
-pixid=ЛОГИН
-pixpass=ПАРОЛЬ
+if [ -f ~/.config/boorulogins.conf ]
+then
+  . ~/.config/boorulogins.conf
+else
+  echo Файл с данными для авторизации не найден!
+  echo Создайте файл ~/.config/boorulogins.conf и поместите в него следующие строки:
+  echo pixid=ВАШ ЛОГИН
+  echo pixpass=ВАШ ПАРОЛЬ
+  exit 5
+fi
+
 athid=$1
 
 # логинимся (куки в pixiv.txt)
 
 pixlogin () {
+# ярлык на страницу автора для общей кучи
+echo \[InternetShortcut\] > "$2.url"
+echo URL=http\:\/\/www.pixiv.net\/member_illust.php\?id=$1 >> "$2.url"
 echo Logging in...
 AUTH=`curl -k -s -c pixiv.txt -F"mode=login" -F"pass=${pixpass}" -F"pixiv_id=${pixid}" -F"skip=1" https://www.secure.pixiv.net/login.php`
 
@@ -292,27 +300,42 @@ fi
 
 } # procanim
 
-# Обработка всего и вся
-
 # очистка в любом случае
 trap rmtrash 1 2 3 15
 
-pixlogin
-echo [*] Building illust list...
-getlist illust pics
-echo [*] Building albums list...
-getlist manga album
-echo [*] Building animation list...
-getlist ugoira anim
-echo [*] Processing illust list...
-procsingle
-echo [*] Processing albums list...
-echo [*] 1/2 old
-procoldalbums
-echo [*] 2/2 new
-procnewalbums
-echo [*] Processing animation list...
-procanim
-echo [*] Removing trash...
-rmtrash
-echo [*] FINISHED!
+# Обработка всего и вся
+
+# Блокировка
+
+exec < .
+flock -n 0
+
+
+# Если никто каталог не занял, то работаем
+
+if [ $? -eq 0 ]
+then
+  pixlogin
+  echo [*] Building illust list...
+  getlist illust pics
+  echo [*] Building albums list...
+  getlist manga album
+  echo [*] Building animation list...
+  getlist ugoira anim
+  echo [*] Processing illust list...
+  procsingle
+  echo [*] Processing albums list...
+  echo [*] 1/2 old
+  procoldalbums
+  echo [*] 2/2 new
+  procnewalbums
+  echo [*] Processing animation list...
+  procanim
+  echo [*] Removing trash...
+  rmtrash
+  flock -u 0
+  echo [*] FINISHED!
+else
+  echo [!] ERROR! Каталог сохранения уже обрабатывается!
+  exit 4
+fi
