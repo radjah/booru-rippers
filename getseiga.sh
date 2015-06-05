@@ -1,11 +1,11 @@
-#!/bin/bash
+п»ї#!/bin/bash
 
-# Данные учетки
+# Р”Р°РЅРЅС‹Рµ СѓС‡РµС‚РєРё
 
-seigaid='ПОЧТА'
-seigapass=ПАРОЛЬ
+seigaid='РџРћР§РўРђ'
+seigapass=РџРђР РћР›Р¬
 
-# Папка для сохранения вида первая_буква_имени/имя
+# РџР°РїРєР° РґР»СЏ СЃРѕС…СЂР°РЅРµРЅРёСЏ РІРёРґР° РїРµСЂРІР°СЏ_Р±СѓРєРІР°_РёРјРµРЅРё/РёРјСЏ
 
 dirlet=`echo $2|cut -c-1`
 if [ ! -d seiga/${dirlet,,}/$2 ]
@@ -16,19 +16,19 @@ fi
 echo Entering seiga/${dirlet,,}/$2
 cd seiga/${dirlet,,}/$2
 
-# ярлык на страницу автора
+# СЏСЂР»С‹Рє РЅР° СЃС‚СЂР°РЅРёС†Сѓ Р°РІС‚РѕСЂР°
 echo \[InternetShortcut\] > "$2.url"
 echo URL=http\:\/\/seiga\.nicovideo\.jp\/user\/illust\/$1\?target=illust_all >> "$2.url"
 
-# Логинимся и сохраняем куки
+# Р›РѕРіРёРЅРёРјСЃСЏ Рё СЃРѕС…СЂР°РЅСЏРµРј РєСѓРєРё
 
 curl -k -s -c niko.txt -F"mail=${seigaid}" -F"password=${seigapass}" "https://secure.nicovideo.jp/secure/login?site=seiga"
 
-# Чтобы не было запроса подтверждения возраста
+# Р§С‚РѕР±С‹ РЅРµ Р±С‹Р»Рѕ Р·Р°РїСЂРѕСЃР° РїРѕРґС‚РІРµСЂР¶РґРµРЅРёСЏ РІРѕР·СЂР°СЃС‚Р°
 
 echo "seiga.nicovideo.jp	FALSE	/	FALSE	4564805162	skip_fetish_warning	1" >> niko.txt
 
-# Перебираем все страницы
+# РџРµСЂРµР±РёСЂР°РµРј РІСЃРµ СЃС‚СЂР°РЅРёС†С‹
 
 picnum=1
 pagenum=1
@@ -38,38 +38,38 @@ until [ $picnum -eq 0 ]
 do
 wget "http://seiga.nicovideo.jp/user/illust/$athid?page=$pagenum&target=illust_all" --load-cookies=niko.txt -O - |pcregrep -o -e 'lohas\.nicoseiga\.jp\/\/thumb\/[^q]+'|pcregrep -o -e '\d+'|awk '{ print "http://seiga.nicovideo.jp/image/source/"$0 }' > out.txt
   picnum=`cat out.txt|wc -l`
-  # Если что-то напарсили
+  # Р•СЃР»Рё С‡С‚Рѕ-С‚Рѕ РЅР°РїР°СЂСЃРёР»Рё
   if [ $picnum \> 0 ]
   then
-    # Запоминаем
+    # Р—Р°РїРѕРјРёРЅР°РµРј
     cat out.txt >> get.seiga.all.txt
     let "pagenum++"
   fi
 done;
 
-# Проверяем уже скаченное
+# РџСЂРѕРІРµСЂСЏРµРј СѓР¶Рµ СЃРєР°С‡РµРЅРЅРѕРµ
 
 ls *.jp*g *.png *.gif|sed 's/\..*//g'|sort > pres.txt
 basename -a `cat get.seiga.all.txt`|sort > all.txt
 comm -2 -3 all.txt pres.txt  | awk '{ print "http://seiga.nicovideo.jp/image/source/" $0 }' > get.seiga.all.txt
 
 
-# Качаем
+# РљР°С‡Р°РµРј
 if [ -s get.seiga.all.txt ]
 then
-  # Собираем URL изображений
+  # РЎРѕР±РёСЂР°РµРј URL РёР·РѕР±СЂР°Р¶РµРЅРёР№
   cat get.seiga.all.txt|xargs -l1 curl -b niko.txt -D - | grep Location > loclist.txt
-  # Костыль для awk
+  # РљРѕСЃС‚С‹Р»СЊ РґР»СЏ awk
   dos2unix loclist.txt
-  # Дописываем расширение jpg для всех файлов
+  # Р”РѕРїРёСЃС‹РІР°РµРј СЂР°СЃС€РёСЂРµРЅРёРµ jpg РґР»СЏ РІСЃРµС… С„Р°Р№Р»РѕРІ
   cat loclist.txt| pcregrep -o -e 'http.+'|sed 's#/o/#/priv/#g'|awk -F"/" '{ print $0" -O "$NF".jpg" }' > list.txt
   # cat loclist.txt| pcregrep -o -e 'http.+'|sed 's#/o/#/priv/#g' > list.txt
-  # Выкачиваем
+  # Р’С‹РєР°С‡РёРІР°РµРј
   cat list.txt|xargs -t -l1 wget --load-cookies=niko.txt -nc
   # wget --content-disposition --load-cookies=niko.txt -nc -R "http://lohas.nicoseiga.jp/" -i list.txt
 fi
 
-# Убираем мусор
+# РЈР±РёСЂР°РµРј РјСѓСЃРѕСЂ
 if [ ! $3 ]
 then
   rm -rf out.txt get.seiga.all.txt niko.txt list.txt loclist.txt pres.txt all.txt
