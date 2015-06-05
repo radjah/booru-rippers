@@ -2,8 +2,17 @@
 
 # Данные учетки
 
-seigaid='ПОЧТА'
-seigapass=ПАРОЛЬ
+if [ -f ~/.config/boorulogins.conf ]
+then
+  . ~/.config/boorulogins.conf
+else
+  echo Файл с данными для авторизации не найден!
+  echo Создайте файл ~/.config/boorulogins.conf и поместите в него следующие строки:
+  echo seigaid=ВАШ ЛОГИН
+  echo seigapass=ВАШ ПАРОЛЬ
+  exit 5
+fi
+
 
 # Папка для сохранения вида первая_буква_имени/имя
 
