@@ -1,10 +1,11 @@
 #!/bin/bash
 
 # Проверка параметров
-
-if [ "$2" = "" ]
+athid=$1
+savedir=$2
+if [ "$savedir" = "" ]
 then
-  if [ "$1" = "" ]
+  if [ "$athid" = "" ]
   then
     echo Не указан ID художника и каталог!
   fi
@@ -14,17 +15,17 @@ fi
 
 
 dldr='aria2c --remote-time'
-dirlet=`echo $2|cut -c-1`
+dirlet=`echo $savedir|cut -c-1`
 
-if [ ! -d ${dirlet,,}/$2 ]
+if [ ! -d ${dirlet,,}/$savedir ]
 then
-  echo Creating ${dirlet,,}/$2
-  mkdir -p "${dirlet,,}/$2"
+  echo Creating ${dirlet,,}/$savedir
+  mkdir -p "${dirlet,,}/$savedir"
 else
   dldr='wget -nc'
 fi
-echo Entering ${dirlet,,}/$2
-cd ${dirlet,,}/$2
+echo Entering ${dirlet,,}/$savedir
+cd ${dirlet,,}/$savedir
 
 # настройки
 # id художника (athid) берется из URL вида http://www.pixiv.net/member_illust.php?id=18530, где 18530 и есть искомый параметр.
@@ -39,14 +40,12 @@ else
   exit 5
 fi
 
-athid=$1
-
 # логинимся (куки в pixiv.txt)
 
 pixlogin () {
 # ярлык на страницу автора для общей кучи
-echo \[InternetShortcut\] > "$2.url"
-echo URL=http\:\/\/www.pixiv.net\/member_illust.php\?id=$1 >> "$2.url"
+echo \[InternetShortcut\] > "$.url"
+echo URL=http\:\/\/www.pixiv.net\/member_illust.php\?id=$athid >> "$savedir.url"
 echo Logging in...
 AUTH=`curl -k -s -c pixiv.txt -F"mode=login" -F"pass=${pixpass}" -F"pixiv_id=${pixid}" -F"skip=1" https://www.secure.pixiv.net/login.php`
 
