@@ -44,7 +44,7 @@ fi
 
 pixlogin () {
 # ярлык на страницу автора для общей кучи
-echo \[InternetShortcut\] > "$.url"
+echo \[InternetShortcut\] > "$savedir.url"
 echo URL=http\:\/\/www.pixiv.net\/member_illust.php\?id=$athid >> "$savedir.url"
 echo Logging in...
 AUTH=`curl -k -s -c pixiv.txt -F"mode=login" -F"pass=${pixpass}" -F"pixiv_id=${pixid}" -F"skip=1" https://www.secure.pixiv.net/login.php`
