@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 
 uag="Mozilla/5.0 (Windows; U; Windows NT 5.1; ru; rv:1.9.1.1) Gecko/20090715 Firefox/3.5.1 (.NET CLR 3.5.30729)"
 
