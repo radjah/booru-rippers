@@ -18,23 +18,21 @@ else
   fi
 fi
 
-
-dldr='aria2c --remote-time'
 if [ ! -d $savedir ]
 then
   echo Creating $savedir
   mkdir "$savedir"
-else
-  dldr='wget -nc'
 fi
 echo Entering $savedir
 cd "$savedir"
 
-#export proxy=127.0.0.1:19999
-#postcount=`curl --socks5 $proxy -# "http://gelbooru.com/index.php?page=dapi&s=post&q=index&tags=$tags&limit=1"|pcregrep -o 'posts\ count=\"[^"]+'|sed -e 's/posts\ count=//' -e 's/\"//'`
 postcount=`curl -# "http://gelbooru.com/index.php?page=dapi&s=post&q=index&tags=$tags&limit=1"|pcregrep -o 'posts\ count=\"[^"]+'|sed -e 's/posts\ count=//' -e 's/\"//'`
 echo $postcount posts
-rm -f get2.gelbooru.txt
+
+if [ -s get2.gelbooru.txt ]
+then
+  rm -f get2.gelbooru.txt
+fi
 
 let "pcount=postcount/1000"
 
@@ -42,10 +40,7 @@ echo $pcount
 echo "http://gelbooru.com/index.php?page=dapi&s=post&q=index&tags=$tags&limit=1000&pid=$i"
 for ((i=0; i<=$pcount; i++))
 do
-  #curl  --socks5 $proxy "http://gelbooru.com/index.php?page=dapi&s=post&q=index&tags=$tags&limit=1000&pid=$i" -A "$uag"|pcregrep -o -e 'file_url=[^ ]+'|sed -e 's/file_url=//g' -e 's/\"//g'  >>get2.gelbooru.txt
   curl "http://gelbooru.com/index.php?page=dapi&s=post&q=index&tags=$tags&limit=1000&pid=$i" -A "$uag"|pcregrep -o -e 'file_url=[^ ]+'|sed -e 's/file_url=//g' -e 's/\"//g'  >>get2.gelbooru.txt
 done;
-
-# $dldr -i get2.gelbooru.txt
 
 wget -nc -i get2.gelbooru.txt --referer="http://gelbooru.com/"
