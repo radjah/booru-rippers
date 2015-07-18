@@ -42,7 +42,7 @@ fi
 
 # поиск и удаление дублей
 finddups () {
-  fdupes . |grep -v .txt| dups,pixiv.txt
+  fdupes . |grep -v .txt > dups,pixiv.txt
   if [ -s dups.pixiv.txt ]
   then
     cat dups.pixiv.txt |grep -v _|xargs -l1 rm
