@@ -42,7 +42,7 @@ fi
 
 # поиск и удаление дублей
 finddups () {
-  fdupes . |grep -v .txt > dups,pixiv.txt
+  fdupes . |grep -v .txt| grep -v "^$" > dups.pixiv.txt
   if [ -s dups.pixiv.txt ]
   then
     cat dups.pixiv.txt |grep -v _|xargs -l1 rm
@@ -122,7 +122,7 @@ fi
 
 # удаляем мусор
 rmtrash () {
-if [ ! $3 ]
+if [ ! $1 ]
 then
   rm -f get*.txt *pixiv.txt list* out.*
 fi
@@ -342,7 +342,7 @@ then
   echo [*] Removing dups...
   finddups
   echo [*] Removing trash...
-  rmtrash
+  rmtrash $3
   flock -u 0
   echo [*] FINISHED!
 else
