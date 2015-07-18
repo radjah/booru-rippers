@@ -40,8 +40,17 @@ else
   exit 5
 fi
 
-# логинимся (куки в pixiv.txt)
+# поиск и удаление дублей
+finddups () {
+  fdupes . |grep -v .txt| dups,pixiv.txt
+  if [ -s dups.pixiv.txt ]
+  then
+    cat dups.pixiv.txt |grep -v _|xargs -l1 rm
+    cat dups.pixiv.txt |grep _big|xargs -l1 rm
+  fi
+} # finddups
 
+# логинимся (куки в pixiv.txt)
 pixlogin () {
 # ярлык на страницу автора для общей кучи
 echo \[InternetShortcut\] > "$savedir.url"
@@ -115,7 +124,7 @@ fi
 rmtrash () {
 if [ ! $3 ]
 then
-  rm -f get*.txt pixiv.txt list* out.*
+  rm -f get*.txt *pixiv.txt list* out.*
 fi
 } # rmtrash
 
@@ -330,6 +339,8 @@ then
   procnewalbums
   echo [*] Processing animation list...
   procanim
+  echo [*] Removing dups...
+  finddups
   echo [*] Removing trash...
   rmtrash
   flock -u 0
