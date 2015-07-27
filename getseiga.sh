@@ -49,7 +49,7 @@ cd seiga/${dirlet,,}/$2
 
 seigalogin () {
 # Логинимся и сохраняем куки
-  if [ -s niko.txt ]
+  if [ -e niko.txt ]
   then
     rm niko.txt
   fi
