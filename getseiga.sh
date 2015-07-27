@@ -13,6 +13,20 @@ else
   exit 5
 fi
 
+# Проверка параметров
+athid=$1
+savedir=$2
+
+if [ "$savedir" = "" ]
+then
+  if [ "$athid" = "" ]
+  then
+    echo Не указан ID художника и каталог!
+  fi
+  echo Использование: `basename $0` id_художника каталог
+  exit 1
+fi
+
 
 # Папка для сохранения вида первая_буква_имени/имя
 
@@ -25,17 +39,40 @@ fi
 echo Entering seiga/${dirlet,,}/$2
 cd seiga/${dirlet,,}/$2
 
+
+
 # ярлык на страницу автора
-echo \[InternetShortcut\] > "$2.url"
-echo URL=http\:\/\/seiga\.nicovideo\.jp\/user\/illust\/$1\?target=illust_all >> "$2.url"
+  echo \[InternetShortcut\] > "$savedir.url"
+  echo URL=http\:\/\/seiga\.nicovideo\.jp\/user\/illust\/$athid\?target=illust_all >> "$savedir.url"
 
+# Логинимся (куки в niko.txt)
+
+seigalogin () {
 # Логинимся и сохраняем куки
-
-curl -k -s -c niko.txt -F"mail=${seigaid}" -F"password=${seigapass}" "https://secure.nicovideo.jp/secure/login?site=seiga"
+  if [ -s niko.txt ]
+  then
+    rm niko.txt
+  fi
+  curl -k -s -c niko.txt -F"mail=${seigaid}" -F"password=${seigapass}" "https://secure.nicovideo.jp/secure/login?site=seiga"
 
 # Чтобы не было запроса подтверждения возраста
 
-echo "seiga.nicovideo.jp	FALSE	/	FALSE	4564805162	skip_fetish_warning	1" >> niko.txt
+  echo "seiga.nicovideo.jp	FALSE	/	FALSE	4564805162	skip_fetish_warning	1" >> niko.txt
+
+# Проверка логина
+  checklog=`cat niko.txt |grep user_session|wc -l`
+  if [ $checklog -eq 0 ]
+  then
+    echo ERROR: Проверьте логин и пароль
+    rm pixiv.txt
+    exit 2
+  else
+    echo OK
+  fi
+
+}
+
+seigalogin
 
 # Перебираем все страницы
 
@@ -62,24 +99,28 @@ ls *.jp*g *.png *.gif|sed 's/\..*//g'|sort > pres.txt
 basename -a `cat get.seiga.all.txt`|sort > all.txt
 comm -2 -3 all.txt pres.txt  | awk '{ print "http://seiga.nicovideo.jp/image/source/" $0 }' > get.seiga.all.txt
 
-
 # Качаем
 if [ -s get.seiga.all.txt ]
 then
+  seigalogin
   # Собираем URL изображений
   cat get.seiga.all.txt|xargs -l1 curl -b niko.txt -D - | grep Location > loclist.txt
   # Костыль для awk
   dos2unix loclist.txt
   # Дописываем расширение jpg для всех файлов
   cat loclist.txt| pcregrep -o -e 'http.+'|sed 's#/o/#/priv/#g'|awk -F"/" '{ print $0" -O "$NF".jpg" }' > list.txt
-  # cat loclist.txt| pcregrep -o -e 'http.+'|sed 's#/o/#/priv/#g' > list.txt
+  # Нарезаем для обхода истечения времени сессии
+  split -l 100 -d -a 6 --additional-suffix=.list.txt list.txt get.seiga.
   # Выкачиваем
-  cat list.txt|xargs -t -l1 wget --load-cookies=niko.txt -nc
-  # wget --content-disposition --load-cookies=niko.txt -nc -R "http://lohas.nicoseiga.jp/" -i list.txt
+  for i in `ls get.seiga.*.list.txt`
+  do
+    seigalogin
+    cat $i|xargs -t -l1 wget --load-cookies=niko.txt -nc
+  done;
 fi
 
 # Убираем мусор
 if [ ! $3 ]
 then
-  rm -rf out.txt get.seiga.all.txt niko.txt list.txt loclist.txt pres.txt all.txt
+  rm -rf out.txt get.seiga.all.txt niko.txt *list.txt loclist.txt pres.txt all.txt
 fi
