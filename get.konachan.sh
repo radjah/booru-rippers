@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 
 # Юзергаент
 uag="Mozilla/5.0 (Windows; U; Windows NT 5.1; ru; rv:1.9.1.1) Gecko/20090715 Firefox/3.5.1 (.NET CLR 3.5.30729)"
@@ -20,7 +20,7 @@ else
   fi
 fi
 
-# Каталог для закачки и выбор качалки
+# Каталог для закачки
 if [ ! -d $savedir ]
 then
   echo Creating $savedir
