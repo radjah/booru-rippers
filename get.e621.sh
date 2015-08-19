@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Юзергаент
-uag="Mozilla/5.0 (Windows; U; Windows NT 5.1; ru; rv:1.9.1.1) Gecko/20090715 Firefox/3.5.1 (.NET CLR 3.5.30729)"
+uag="Mozilla/5.0 (Windows NT 6.3; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0"
 
 # Проверка параметров
 if [ ! "$2" = "" ]

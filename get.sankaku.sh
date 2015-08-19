@@ -44,7 +44,7 @@ fi
 
 # логинимся (куки в sankaku.txt)
 echo Logging in...
-ATH=`curl -s -c sankaku.txt -F"commit=Login" -F"user[name]=${sanlogin}" -F"user[password]=${sanpass}" https://chan.sankakucomplex.com/user/authenticate`
+ATH=`curl -# -s -c sankaku.txt -F"commit=Login" -F"user[name]=${sanlogin}" -F"user[password]=${sanpass}" https://chan.sankakucomplex.com/user/authenticate`
 
 # Проверка логина
 checklog=`cat sankaku.txt |grep pass_hash|wc -l`
@@ -71,8 +71,7 @@ until [ $picnum -eq 0 ]
 do
   # Получение списка
   wget --no-check-certificate --load-cookies=sankaku.txt "https://chan.sankakucomplex.com/post/index.json?tags=$tags&page=$pagenum" -O out.dat --referer="https://chan.sankakucomplex.com/" -U "$uag"
-  cat out.dat | pcregrep -o -e 'file_url\":\"[^\"]+'|sed -e 's/\"//g' -e 's/file_url/https/g' -e 's/\?.*//g' > tmp.sankaku.txt
-  # cat out.dat | pcregrep --buffer-size=1M -o -e 'file_url\":\"[^\"]+'|sed -e 's/\"//g' -e 's/file_url/https/g' -e 's/\?.*//g' > tmp.sankaku.txt
+  cat out.dat | pcregrep --buffer-size=1M -o -e 'file_url\":\"[^\"]+'|sed -e 's/\"//g' -e 's/file_url/https/g' -e 's/\?.*//g' > tmp.sankaku.txt
   picnum=`cat tmp.sankaku.txt|wc -l`
   if [ $picnum \> 0 ]
   then
