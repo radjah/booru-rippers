@@ -44,7 +44,7 @@ fi
 # Удаление файла-списка
 if [ -e get2.konachan.txt ]
 then
-  rm -а get2.konachan.txt
+  rm -f get2.konachan.txt
 fi
 
 let "pcount=postcount/1000+1"
