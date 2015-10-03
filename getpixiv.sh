@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Юзергаент
+uag="Mozilla/5.0 (Windows NT 6.3; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0"
+
 # Проверка параметров
 athid=$1
 savedir=$2
@@ -80,7 +83,8 @@ pagenum=1
 until [ $picnum -eq 0 ]
 do
   # страница для парсинга
-  wget --load-cookies=pixiv.txt "http://www.pixiv.net/member_illust.php?type=$1&id=$athid&p=$pagenum" -O - --referer="http://www.pixiv.net/" > out.dat
+  echo Page $pagenum
+  curl -# -b pixiv.txt "http://www.pixiv.net/member_illust.php?type=$1&id=$athid&p=$pagenum" -A "$uag" --referer "http://www.pixiv.net/" > out.dat
   
   # Самый старый формат (скорее всего уже ничего не даст, но пусть будет)
   cat out.dat|pcregrep -o -e 'http\:\/\/i\d{1,3}\.pixiv\.net\/img\d{1,3}\/img\/[^\"]+' > out.int.txt
@@ -139,7 +143,7 @@ procsingle () {
 
 for i in `cat get.pixiv.pics.new.txt get.pixiv.album.new.txt`
 do
-  ismanga=`wget --load-cookies=pixiv.txt "http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$i" -O - --referer="http://www.pixiv.net/"|pcregrep --buffer-size=1M  -o -e 'mode=manga[^\"]+'|wc -l`
+  ismanga=`curl -# -b pixiv.txt "http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$i" --referer "http://www.pixiv.net/" -A "$uaf"|pcregrep --buffer-size=1M  -o -e 'mode=manga[^\"]+'|wc -l`
   if [ $ismanga -gt 0 ]
   then
     echo $i >> get.pixiv.album.new.txt
@@ -158,7 +162,7 @@ comm -2 -3 get.pixiv.album.new.sort.txt get.pixiv.pics.alt.sort.txt > get.pixiv.
 # Обрабатываем отфильтрованное
 for i in `cat get.pixiv.pics.alt.txt`
 do
-  wget "http://www.pixiv.net/member_illust.php?mode=big&illust_id=$i" --load-cookies=pixiv.txt --referer="http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$i" -O -|pcregrep --buffer-size=1M -o -e 'http\:\/\/i\d{1,3}\.pixiv\.net\/img[^\"]+' >> get.pixiv.pics.dl.txt
+  curl -# "http://www.pixiv.net/member_illust.php?mode=big&illust_id=$i" -b pixiv.txt --referer "http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$i" -A "$uag"|pcregrep --buffer-size=1M -o -e 'http\:\/\/i\d{1,3}\.pixiv\.net\/img[^\"]+' >> get.pixiv.pics.dl.txt
 done;
 
 # Скачивание
@@ -184,7 +188,7 @@ if [ -s get.pixiv.album.alt.txt ]
 then
   for i in `cat get.pixiv.album.alt.txt`
   do
-    wget "http://www.pixiv.net/member_illust.php?mode=manga&illust_id=$i&type=scroll" --load-cookies=pixiv.txt --referer="http://www.pixiv.net/" -O -|pcregrep --buffer-size=1M -o -e "http\:\/\/i\d{1,3}\.pixiv\.net\/img\d{1,3}\/img\/[^(\'|\?|\")]+" -e "http\:\/\/i\d{1,3}\.pixiv\.net\/img-inf\/img\/[^(\'|\?|\")]+"| sed -e 's/\?.*//'>> get.pixiv.album.dl.alt.txt
+    curl -# "http://www.pixiv.net/member_illust.php?mode=manga&illust_id=$i&type=scroll" -b pixiv.txt --referer "http://www.pixiv.net/" -A "$uag"|pcregrep --buffer-size=1M -o -e "http\:\/\/i\d{1,3}\.pixiv\.net\/img\d{1,3}\/img\/[^(\'|\?|\")]+" -e "http\:\/\/i\d{1,3}\.pixiv\.net\/img-inf\/img\/[^(\'|\?|\")]+"| sed -e 's/\?.*//'>> get.pixiv.album.dl.alt.txt
   done;
 fi
 
@@ -215,7 +219,7 @@ if [ -s get.pixiv.album.small.txt ]
 then
   for i in `cat get.pixiv.album.small.txt`
   do
-    wget "http://www.pixiv.net/member_illust.php?mode=manga&illust_id=$i&type=scroll" --load-cookies=pixiv.txt --referer="http://www.pixiv.net/" -O out.dat
+    curl -# "http://www.pixiv.net/member_illust.php?mode=manga&illust_id=$i&type=scroll" -b pixiv.txt --referer "http://www.pixiv.net/" -A "$uag" > out.dat
     cat out.dat|pcregrep --buffer-size=1M -o -e "http\:\/\/i\d{1,3}\.pixiv\.net\/img\d{1,3}\/img\/[^(\'|\?|\")]+" -e "http\:\/\/i\d{1,3}\.pixiv\.net\/img-inf\/img\/[^(\'|\?|\")]+" >> get.pixiv.album.dl.small.txt
     # для обработки скриптового листания манги
     cat out.dat|sed 's#\\\/#\/#g'|pcregrep --buffer-size=1M -o -e "http\:\/\/i\d{1,3}\.pixiv\.net\/img\d{1,3}\/img\/[^(\'|\?|\")]+" -e "http\:\/\/i\d{1,3}\.pixiv\.net\/img[^\")]+"|grep -v '/mobile/'|grep 'big' >> get.pixiv.album.dl.small.txt
@@ -240,7 +244,7 @@ if [ -s get.pixiv.album.new.txt ]
 then
   for i in `cat get.pixiv.album.new.txt`
   do
-    wget "http://www.pixiv.net/member_illust.php?mode=manga&illust_id=$i&type=scroll" --load-cookies=pixiv.txt --referer="http://www.pixiv.net/" -O -|pcregrep --buffer-size=1M -o -e "http\:\/\/i\d{1,3}\.pixiv\.net\/c[^\"]+"| sed -e 's#c\/1200x1200\/img-master#img-original#g' -e 's/_master1200//'>> get.pixiv.album.dl.new.txt
+    curl -# "http://www.pixiv.net/member_illust.php?mode=manga&illust_id=$i&type=scroll" -b pixiv.txt --referer "http://www.pixiv.net/" -A "$uag"|pcregrep --buffer-size=1M -o -e "http\:\/\/i\d{1,3}\.pixiv\.net\/c[^\"]+"| sed -e 's#c\/1200x1200\/img-master#img-original#g' -e 's/_master1200//'>> get.pixiv.album.dl.new.txt
   done;
   if [ -s get.pixiv.album.dl.new.txt ] 
   then
@@ -263,7 +267,7 @@ then
         # пока ни одной сслыки не будет найдено (страница с ошибкой)
         until [ $picnum -eq 0 ]
         do
-          wget "http://www.pixiv.net/member_illust.php?mode=manga_big&illust_id=$i&page=$pagenum"  --load-cookies=pixiv.txt --referer="http://www.pixiv.net/member_illust.php?mode=manga&illust_id=$i" -O out.dat
+          curl -# "http://www.pixiv.net/member_illust.php?mode=manga_big&illust_id=$i&page=$pagenum"  -b pixiv.txt --referer "http://www.pixiv.net/member_illust.php?mode=manga&illust_id=$i" -A "$uag" > out.dat
           picnum=`cat out.dat|pcregrep -o  -e 'http\:\/\/i\d{1,3}\.pixiv\.net\/img[^\"]+'|grep -v ugoira|wc -l`
           cat out.dat|pcregrep -o  -e 'http\:\/\/i\d{1,3}\.pixiv\.net\/img[^\"]+' >> get.pixiv.albums.new.list.txt
           let "pagenum++"
@@ -292,7 +296,7 @@ then
   for i in `cat get.pixiv.anim.alt.txt get.pixiv.anim.new.txt`
   do
     # Получение страницы
-    wget "http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$i" --load-cookies=pixiv.txt --referer="http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$i" -O out.ugo
+    curl -# "http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$i" -b pixiv.txt --referer "http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$i" -A "$uag" > out.ugo
     # Получение ссылки
     cat out.ugo|pcregrep --buffer-size=1M -o -e 'FullscreenData.+?\.zip'|pcregrep -o -e 'http.+'|sed 's/\\//g' >> get.pixiv.anim.dl.txt
     # Сохранение информации для анимацией

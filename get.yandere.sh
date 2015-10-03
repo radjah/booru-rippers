@@ -50,7 +50,8 @@ let "pcount=postcount/1000+1"
 
 for ((i=1; i<=$pcount; i++))
 do
-  curl -k "https://yande.re/post/index.xml?tags=$1&limit=1000&page=$i" -A "$uag" |pcregrep -o -e 'file_url=[^ ]+'|sed -e 's/file_url=//g' -e 's/\"//g' >> get2.yandere.txt
+  echo Page $pcount
+  curl -# "https://yande.re/post/index.xml?tags=$1&limit=1000&page=$i" -A "$uag" |pcregrep -o -e 'file_url=[^ ]+'|sed -e 's/file_url=//g' -e 's/\"//g' >> get2.yandere.txt
 done;
 
 # Дробление списка

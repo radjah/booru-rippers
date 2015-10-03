@@ -51,7 +51,8 @@ let "pcount=postcount/1000"
 
 for ((i=0; i<=$pcount; i++))
 do
-  curl "http://gelbooru.com/index.php?page=dapi&s=post&q=index&tags=$tags&limit=1000&pid=$i" -A "$uag"|pcregrep -o -e 'file_url=[^ ]+'|sed -e 's/file_url=//g' -e 's/\"//g'  >>get2.gelbooru.txt
+    echo Page $pcount
+  curl -# "http://gelbooru.com/index.php?page=dapi&s=post&q=index&tags=$tags&limit=1000&pid=$i" -A "$uag"|pcregrep -o -e 'file_url=[^ ]+'|sed -e 's/file_url=//g' -e 's/\"//g'  >>get2.gelbooru.txt
 done;
 
 wget -nc -i get2.gelbooru.txt --referer="http://gelbooru.com/"

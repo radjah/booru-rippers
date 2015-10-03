@@ -1,4 +1,7 @@
-﻿#!/bin/bash
+#!/bin/bash
+
+# Юзергаент
+uag="Mozilla/5.0 (Windows NT 6.3; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0"
 
 # Данные учетки
 
@@ -82,7 +85,8 @@ athid=$1
 
 until [ $picnum -eq 0 ]
 do
-wget "http://seiga.nicovideo.jp/user/illust/$athid?page=$pagenum&target=illust_all" --load-cookies=niko.txt -O - |pcregrep -o -e 'lohas\.nicoseiga\.jp\/\/thumb\/[^q]+'|pcregrep -o -e '\d+'|awk '{ print "http://seiga.nicovideo.jp/image/source/"$0 }' > out.txt
+  echo Page $pagenum
+  curl -# "http://seiga.nicovideo.jp/user/illust/$athid?page=$pagenum&target=illust_all" -b niko.txt -A "$uag" |pcregrep -o -e 'lohas\.nicoseiga\.jp\/\/thumb\/[^q]+'|pcregrep -o -e '\d+'|awk '{ print "http://seiga.nicovideo.jp/image/source/"$0 }' > out.txt
   picnum=`cat out.txt|wc -l`
   # Если что-то напарсили
   if [ $picnum \> 0 ]
