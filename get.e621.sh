@@ -53,7 +53,7 @@ let "pcount=postcount/100+1"
 echo $pcount
 for ((i=1; i<=$pcount; i++))
 do
-  echo Page $pcount
+  echo Page $i
   curl -# "https://e621.net/post/index.xml?tags=$tags&limit=100&page=$i" -A "$uag"|pcregrep -o -e 'file_url=[^ ]+'|sed -e 's/file_url=//g' -e 's/\"//g' >> get2.e621.txt
 done;
 
