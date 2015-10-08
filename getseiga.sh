@@ -108,7 +108,7 @@ if [ -s get.seiga.all.txt ]
 then
   seigalogin
   # Собираем URL изображений
-  cat get.seiga.all.txt|xargs -l1 curl -b niko.txt -D - | grep Location > loclist.txt
+  cat get.seiga.all.txt|xargs -l1 -t curl -# -b niko.txt -D - | grep Location > loclist.txt
   # Костыль для awk
   dos2unix loclist.txt
   # Дописываем расширение jpg для всех файлов
