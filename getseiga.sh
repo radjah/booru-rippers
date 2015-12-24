@@ -106,25 +106,29 @@ comm -2 -3 all.txt pres.txt  | awk '{ print "http://seiga.nicovideo.jp/image/sou
 # Качаем
 if [ -s get.seiga.all.txt ]
 then
-  seigalogin
   # Собираем URL изображений
-  cat get.seiga.all.txt|xargs -l1 -t curl -# -b niko.txt -D - | grep Location > loclist.txt
-  # Костыль для awk
-  dos2unix loclist.txt
-  # Дописываем расширение jpg для всех файлов
-  cat loclist.txt| pcregrep -o -e 'http.+'|sed 's#/o/#/priv/#g'|awk -F"/" '{ print $0" -O "$NF".jpg" }' > list.txt
-  # Нарезаем для обхода истечения времени сессии
-  split -l 100 -d -a 6 --additional-suffix=.list.txt list.txt get.seiga.
-  # Выкачиваем
-  for i in `ls get.seiga.*.list.txt`
+  # Разбиваем список, чтобы сессия не истекала на больших списках
+  split -l 100 -d -a 6 --additional-suffix=.all.txt get.seiga.all.txt get.seiga.
+  if [ -f loclist.txt ]
+  then
+    rm loclist.txt
+  fi
+  for i in `ls get.seiga.*.all.txt`
   do
     seigalogin
-    cat $i|xargs -t -l1 wget --load-cookies=niko.txt -nc
+    cat $i|xargs -l1 -t curl -# -b niko.txt -D - | grep Location > loclist.txt
+    # Костыль для awk
+    dos2unix loclist.txt
+    # Дописываем расширение jpg для всех файлов
+    cat loclist.txt| pcregrep -o -e 'http.+'|sed 's#/o/#/priv/#g'|awk -F"/" '{ print $0" -O "$NF".jpg" }' > list.txt
+    # Выкачиваем
+    seigalogin
+    cat list.txt|xargs -t -l1 wget --load-cookies=niko.txt -nc
   done;
 fi
 
 # Убираем мусор
 if [ ! $3 ]
 then
-  rm -rf out.txt get.seiga.all.txt niko.txt *list.txt loclist.txt pres.txt all.txt
+  rm -rf out.txt get.seiga*all.txt niko.txt *list.txt pres.txt all.txt
 fi
