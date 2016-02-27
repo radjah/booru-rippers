@@ -43,18 +43,28 @@ else
 fi
 
 # Удаление файла-списка
-if [ -s get2.e621.txt ]
+if [ -s get.e621.txt ]
 then
-  rm -f get2.e621.txt
+  rm -f get.e621.txt
 fi
 
-let "pcount=postcount/100+1"
+# Загрузка до тех пор, пока в выдаче будет 0 ссылок
+pagenum=1
+picnum=1
 
-echo $pcount
-for ((i=1; i<=$pcount; i++))
+until [ $picnum -eq 0 ]
 do
-  echo Page $i
-  curl -# "https://e621.net/post/index.xml?tags=$tags&limit=100&page=$i" -A "$uag"|pcregrep -o -e 'file_url=[^ ]+'|sed -e 's/file_url=//g' -e 's/\"//g' >> get2.e621.txt
+  # Получение списка
+  echo Page $pagenum
+  curl -# "https://e621.net/post/index.xml?tags=$tags&limit=100&page=$pagenum" -A "$uag"|pcregrep -o -e '<file_url>.*<\/file_url>'|sed -e 's#<file_url>##g' -e 's#</file_url>##g' > tmp.e621.txt
+  picnum=`cat tmp.e621.txt|wc -l`
+  if [ $picnum \> 0 ]
+  then
+    cat tmp.e621.txt >> get.e621.txt
+    let "pagenum++"
+  fi
 done;
 
-wget -nc -i get2.e621.txt
+wget --no-check-certificate -nc -i get.e621.txt
+
+rm -f tmp.e621.txt
