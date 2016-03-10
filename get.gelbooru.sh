@@ -21,10 +21,15 @@ else
 fi
 
 # Каталог для закачки
-if [ ! -d $savedir ]
+if [ -d "/u/PicturesHR-T/$savedir" ]
 then
-  echo Creating $savedir
-  mkdir "$savedir"
+  savedir="/u/PicturesHR-T/$savedir"
+else
+  if [ ! -d $savedir ]
+  then
+    echo Creating $savedir
+    mkdir "$savedir"
+  fi
 fi
 echo Entering $savedir
 cd "$savedir"
@@ -49,7 +54,7 @@ fi
 
 # логинимся (куки в gelbooru.txt)
 echo Logging in...
-AUTH=`curl -s -c gelbooru.txt -F"user=${gellogin}" -F"pass=${gelpass}" -F"submit=Log+in" "http://gelbooru.com/index.php?page=account&s=login&code=00"`
+AUTH=`curl -s -c gelbooru.txt --data "user=${gellogin}&pass=${gelpass}&submit=Log+in" "http://gelbooru.com/index.php?page=account&s=login&code=00" -A "$uag"`
 
 if [ ! -e gelbooru.txt ]
 then
