@@ -21,15 +21,10 @@ else
 fi
 
 # Каталог для закачки
-if [ -d "/u/PicturesHR-T/$savedir" ]
+if [ ! -d $savedir ]
 then
-  savedir="/u/PicturesHR-T/$savedir"
-else
-  if [ ! -d $savedir ]
-  then
-    echo Creating $savedir
-    mkdir "$savedir"
-  fi
+  echo Creating $savedir
+  mkdir "$savedir"
 fi
 echo Entering $savedir
 cd "$savedir"
