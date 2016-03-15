@@ -59,7 +59,7 @@ pixlogin () {
 echo \[InternetShortcut\] > "$savedir.url"
 echo URL=http\:\/\/www.pixiv.net\/member_illust.php\?id=$athid >> "$savedir.url"
 echo Logging in...
-AUTH=`curl -k -s -c pixiv.txt -F"mode=login" -F"pass=${pixpass}" -F"pixiv_id=${pixid}" -F"skip=1" https://www.secure.pixiv.net/login.php`
+AUTH=`curl -k -s -c pixiv.txt -F"mode=login" -F"pass=${pixpass}" -F"pixiv_id=${pixid}" -F"skip=1" https://www.pixiv.net/login.php`
 
 # Проверка логина
 checklog=`cat pixiv.txt |grep device_token|wc -l`
