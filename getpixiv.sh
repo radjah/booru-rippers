@@ -17,7 +17,7 @@ then
 fi
 
 
-dldr='aria2c --remote-time'
+dldr='aria2c --always-resume=false --max-resume-failure-tries=0 --remote-time'
 dirlet=`echo $savedir|cut -c-1`
 
 if [ ! -d ${dirlet,,}/$savedir ]
