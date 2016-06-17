@@ -16,7 +16,6 @@ then
   exit 1
 fi
 
-
 dldr='aria2c --always-resume=false --max-resume-failure-tries=0 --remote-time'
 dirlet=`echo $savedir|cut -c-1`
 
@@ -45,12 +44,24 @@ fi
 
 # поиск и удаление дублей
 finddups () {
-  fdupes . |grep -v .txt| grep -v "^$" > dups.pixiv.txt
-  if [ -s dups.pixiv.txt ]
+# Список скаченного
+  ls *.jp*g *.png *.gif|grep -v big|grep _|sed 's/_.*//g'|sort|uniq > downloaded.pixiv.txt
+
+# Список совпадающего из старья
+  if [ -s downloaded.pixiv.txt ]
   then
-    cat dups.pixiv.txt |grep -v _|xargs -l1 rm
-    cat dups.pixiv.txt |grep _big|xargs -l1 rm
+    cat downloaded.pixiv.txt | while read i
+    do
+      ls ${i}.* ${i}_big* 2>/dev/null >> fordel.pixiv.txt
+    done;
   fi
+
+# Удаление
+  if [ -s fordel.pixiv.txt ]
+  then
+    cat fordel.pixiv.txt|xargs -l1 rm
+  fi
+
 } # finddups
 
 # логинимся (куки в pixiv.txt)
@@ -260,7 +271,7 @@ then
   for i in `cat get.pixiv.albums.bad.txt`
   do
     # Если файлов меньше одного, то альбом не скачался
-    if [ `ls $i*|wc -l` -lt `cat get.pixiv.album.dl.new.txt|grep $i|wc -l` ]
+    if [ `ls $i*|grep -v _big |wc -l` -lt `cat get.pixiv.album.dl.new.txt|grep $i|wc -l` ]
       then
         pagenum=0
         picnum=1
