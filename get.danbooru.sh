@@ -57,7 +57,7 @@ until [ $picnum -eq 0 ]
 do
   # Получение списка
   echo Page $pagenum
-  curl $torproxy -# "http://$danlogin:$danapikey@danbooru.donmai.us/post/index.xml?tags=$tags&limit=100&page=$pagenum" -A "$uag"|pcregrep -o -e 'file_url=\"[^\"]+'|sed -e 's/file_url=/http\:\/\/danbooru\.donmai\.us/g' -e 's/\"//g'|sed 's/--.*--//g' > tmp.danbooru.txt
+  curl -# "http://$danlogin:$danapikey@danbooru.donmai.us/post/index.xml?tags=$tags&limit=100&page=$pagenum" -A "$uag"|pcregrep -o -e 'file_url=\"[^\"]+'|sed -e 's/file_url=/http\:\/\/danbooru\.donmai\.us/g' -e 's/\"//g'|sed -e 's/--.*--//g' -e 's/__.*__//g' > tmp.danbooru.txt
   picnum=`cat tmp.danbooru.txt|wc -l`
   if [ $picnum \> 0 ]
   then
