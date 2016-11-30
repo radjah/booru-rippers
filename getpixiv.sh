@@ -70,10 +70,10 @@ pixlogin () {
 echo \[InternetShortcut\] > "$savedir.url"
 echo URL=http\:\/\/www.pixiv.net\/member_illust.php\?id=$athid >> "$savedir.url"
 echo Logging in...
-AUTH=`curl -k -s -c pixiv.txt -F"mode=login" -F"pass=${pixpass}" -F"pixiv_id=${pixid}" -F"skip=1" https://www.pixiv.net/login.php`
+AUTH=`curl $torproxy -k -s -c pixiv.txt --data "username=${pixid}&password=${pixpass}&grant_type=password&client_id=bYGKuGVw91e0NMfPGp44euvGt59s&client_secret=HP3RmkgAmEGro0gn1x9ioawQE8WMfvLXDz3ZqxpK" https://oauth.secure.pixiv.net/auth/token -A "$uag"`
 
 # Проверка логина
-checklog=`cat pixiv.txt |grep device_token|wc -l`
+checklog=`cat pixiv.txt |grep PHPSESSID|wc -l`
 if [ $checklog -eq 0 ]
 then
   echo ERROR: Проверьте логин и пароль
