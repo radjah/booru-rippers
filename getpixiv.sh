@@ -26,7 +26,7 @@ then
   echo Creating ${dirlet,,}/$savedir
   mkdir -p "${dirlet,,}/$savedir"
 else
-  dldr='/opt/wget/bin/wget -nc'
+  dldr='wget -nc'
 fi
 echo Entering ${dirlet,,}/$savedir
 cd ${dirlet,,}/$savedir
