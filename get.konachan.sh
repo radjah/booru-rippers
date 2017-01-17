@@ -47,7 +47,7 @@ then
   rm -f get2.konachan.txt
 fi
 
-let "pcount=postcount/1000+1"
+pcount=`expr $postcount / 1000 + 1`
 
 for ((i=1; i<=$pcount; i++))
 do

@@ -76,7 +76,7 @@ do
   if [ $picnum \> 0 ]
   then
     cat tmp.sankaku.txt >> get.sankaku.txt
-    let "pagenum++"
+    pagenum=`expr $pagenum + 1`
   fi
 done;
 
@@ -86,6 +86,7 @@ postcount=`cat get.sankaku.txt|wc -l`
 if [ $postcount -eq 0 ]
 then
   echo По сочетанию "$tags" ничего не найдено.
+  rm -f tmp.sankaku.txt sankaku.txt
   exit 3
 else
   echo По сочетанию "$tags" найдено постов: $postcount
@@ -94,4 +95,4 @@ fi
 wget --random-wait --no-check-certificate -nc -i get.sankaku.txt -U "$uag"
 
 # убираем за собой
-rm -f tmp.sankaku.txt sankaku.txt out.dat
+rm -f tmp.sankaku.txt sankaku.txt

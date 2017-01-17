@@ -66,6 +66,7 @@ postcount=`curl -b gelbooru.txt -# "http://gelbooru.com/index.php?page=dapi&s=po
 if [ $postcount -eq 0 ]
 then
   echo По сочетанию "$tags" ничего не найдено.
+  rm -f gelbooru.txt
   exit 3
 else
   echo По сочетанию "$tags" найдено постов: $postcount
@@ -77,7 +78,7 @@ then
   rm -f get2.gelbooru.txt
 fi
 
-let "pcount=postcount/1000"
+pcount=`expr $postcount / 1000`
 
 for ((i=0; i<=$pcount; i++))
 do
@@ -87,4 +88,4 @@ done;
 
 wget -nc -i get2.gelbooru.txt --referer="http://gelbooru.com/"
 
-rm gelbooru.txt
+rm -f gelbooru.txt

@@ -37,6 +37,7 @@ echo $postcount posts
 if [ $postcount -eq 0 ]
 then
   echo По сочетанию "$tags" ничего не найдено.
+  rm -f tmp.e621.txt
   exit 3
 else
   echo По сочетанию "$tags" найдено постов: $postcount
@@ -61,7 +62,7 @@ do
   if [ $picnum \> 0 ]
   then
     cat tmp.e621.txt >> get.e621.txt
-    let "pagenum++"
+    pagenum=`expr $pagenum + 1`
   fi
 done;
 
