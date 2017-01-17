@@ -57,12 +57,12 @@ until [ $picnum -eq 0 ]
 do
   # Получение списка
   echo Page $pagenum
-  curl -# "http://$danlogin:$danapikey@danbooru.donmai.us/post/index.xml?tags=$tags&limit=100&page=$pagenum" -A "$uag"|pcregrep -o -e 'file_url=\"[^\"]+'|sed -e 's/file_url=/http\:\/\/danbooru\.donmai\.us/g' -e 's/\"//g'|sed -e 's/--.*--//g' -e 's/__.*__//g' > tmp.danbooru.txt
+  curl -# "http://$danlogin:$danapikey@danbooru.donmai.us/posts.json?tags=$tags&limit=100&page=$pagenum" -A "$uag"|pcregrep --buffer-size 1M -o -e '\"file_url\":\"[^\"]+'|sed -e 's/\"file_url\":\"/http\:\/\/danbooru\.donmai\.us/g' -e 's/\"//g' -e 's/--.*--//g' -e 's/__.*__//g' > tmp.danbooru.txt
   picnum=`cat tmp.danbooru.txt|wc -l`
   if [ $picnum \> 0 ]
   then
     cat tmp.danbooru.txt >> get.danbooru.txt
-    let "pagenum++"
+    pagenum=`expr $pagenum + 1`
   fi
 done;
 
@@ -72,6 +72,7 @@ postcount=`cat get.danbooru.txt|wc -l`
 if [ $postcount -eq 0 ]
 then
   echo По сочетанию "$tags" ничего не найдено.
+  rm -f tmp.danbooru.txt
   exit 3
 else
   echo По сочетанию "$tags" найдено постов: $postcount
@@ -80,4 +81,4 @@ fi
 wget -U "$uag" -nc -i get.danbooru.txt
 
 # уборка
-rm -f danbooru.txt tmp.danbooru.txt
+rm -f tmp.danbooru.txt
