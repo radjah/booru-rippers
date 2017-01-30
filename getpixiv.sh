@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Переменные
-uag="Mozilla/5.0 (Windows NT 6.3; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0"
+uag="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:51.0) Gecko/20100101 Firefox/51.0"
 
 # Проверка параметров
 athid=$1
@@ -26,7 +26,7 @@ then
   echo Creating ${dirlet,,}/$savedir
   mkdir -p "${dirlet,,}/$savedir"
 else
-  dldr='wget -nc'
+  dldr='/opt/wget/bin/wget -nc'
 fi
 echo Entering ${dirlet,,}/$savedir
 cd ${dirlet,,}/$savedir
@@ -66,13 +66,16 @@ finddups () {
 
 } # finddups
 
+# Создать ссылку на страницу художника
+gensc () {
+  # ярлык на страницу автора для общей кучи
+  echo \[InternetShortcut\] > "$savedir.url"
+  echo URL=http\:\/\/www.pixiv.net\/member_illust.php\?id=$athid >> "$savedir.url"
+} # gensc
 
 # логинимся (куки в pixiv.txt, access_token в AUTH)
 # client_id и client_secret от приложения для iphone
 pixlogin () {
-  # ярлык на страницу автора для общей кучи
-  echo \[InternetShortcut\] > "$savedir.url"
-  echo URL=http\:\/\/www.pixiv.net\/member_illust.php\?id=$athid >> "$savedir.url"
   echo Logging in...
   AUTH=`curl -k -s -c pixiv.txt --data "username=${pixid}&password=${pixpass}&grant_type=password&client_id=bYGKuGVw91e0NMfPGp44euvGt59s&client_secret=HP3RmkgAmEGro0gn1x9ioawQE8WMfvLXDz3ZqxpK" https://oauth.secure.pixiv.net/auth/token -A "$uag"|pcregrep -o -e 'access_token\":\"[^\"]+'|sed 's#access_token":"##g'`
 
@@ -86,7 +89,7 @@ pixlogin () {
   else
     echo OK
   fi
-}
+} # pixlogin
 
 # функция для получения списков
 getlist () {
@@ -96,32 +99,27 @@ picnum=1
 pagenum=1
 
 # пустые файлы
-touch get.pixiv.illist.txt get.pixiv.anim.txt
+touch get.pixiv.illist.txt get.pixiv.anim.txt json.pixiv.txt
 
 # перебор страниц
 until [ $picnum -eq 0 ]
 do
   # страница для парсинга во временный файл
   echo Page $pagenum
-  curl -# "https://public-api.secure.pixiv.net/v1/users/$athid/works.json?image_sizes=large&page=$pagenum&per_page=100" -H "Authorization: Bearer $AUTH"|pcregrep --buffer-size 1M -o -e 'large\"\:\"[^\"]+'|sed 's#large":"##g'|sort|uniq > out.tmp.txt
+  curl -# "https://public-api.secure.pixiv.net/v1/users/$athid/works.json?image_sizes=large&page=$pagenum&per_page=100" -H "Authorization: Bearer $AUTH"|sed 's#},{#\n#g' > tmp.json.pixiv.txt
+  cat tmp.json.pixiv.txt|pcregrep --buffer-size 1M -o -e '\"id\"\:[^,]+\,\"title\"'|sort|uniq > out.tmp.txt
   # Сколько нашли на текущей странице?
   picnum=`cat out.tmp.txt|wc -l`
   if [ $picnum \> 0 ]
   then
     # парсим
-    # иллюстрации и альбомы
-    illistcount=`cat out.tmp.txt|grep -v ugoira|wc -l`
-    if [ $illistcount \> 0 ]
-    then
-      basename -a `cat out.tmp.txt|grep -v ugoira`|sed 's#_.*##g' >> get.pixiv.illist.txt
-    fi
-    # анимация
-    illistcount=`cat out.tmp.txt|grep ugoira|wc -l`
-    if [ $illistcount \> 0 ]
-    then
-      basename -a `cat out.tmp.txt|grep ugoira`|sed 's#_.*##g' >> get.pixiv.anim.txt
-    fi
-    let "pagenum++"
+    # иллюстрации сразу в список для закачки
+    cat tmp.json.pixiv.txt|grep -v '"is_manga":true'|grep -v ugoira0.|pcregrep --buffer-size 1M -o -e 'large\"\:\"[^\"]+'|sed 's#large":"##g'|sort|uniq >> get.pixiv.dl.txt
+    # id альбомов для дальнейшей обработки в отдельный список
+    cat tmp.json.pixiv.txt|grep '"is_manga":true'|grep -v ugoira0.|pcregrep --buffer-size 1M -o -e '\"id\"\:[^,]+\,\"title\"'|sed -e 's#"id":##g' -e 's#,"title"##g'|sort|uniq >> get.pixiv.illist.txt
+    # id анимации для дальнейшей обработки в отдельный список
+    cat tmp.json.pixiv.txt|grep ugoira0.|pcregrep --buffer-size 1M -o -e '\"id\"\:[^,]+\,\"title\"'|sed -e 's#"id":##g' -e 's#,"title"##g'|sort|uniq >> get.pixiv.anim.txt
+    pagenum=`expr $pagenum + 1`
   fi
 done;
 
@@ -202,11 +200,13 @@ flock -n 0
 
 if [ $? -eq 0 ]
 then
+  gensc
   pixlogin
   echo [*] Building list...
   getlist
   echo [*] Processing illust and albums list...
   procillist
+  pixlogin
   echo [*] Processing animation list...
   procanim
   echo [*] Removing dups...
