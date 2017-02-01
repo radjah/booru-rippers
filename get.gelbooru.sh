@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Юзергаент
-uag="Mozilla/5.0 (Windows NT 6.3; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0"
+uag="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:51.0) Gecko/20100101 Firefox/51.0"
 
 # Проверка параметров
 if [ ! "$2" = "" ]
@@ -83,7 +83,7 @@ pcount=`expr $postcount / 1000`
 for ((i=0; i<=$pcount; i++))
 do
   echo Page $i
-  curl -b gelbooru.txt -# "http://gelbooru.com/index.php?page=dapi&s=post&q=index&tags=$tags&limit=1000&pid=$i" -A "$uag"|pcregrep -o -e 'file_url=[^ ]+'|sed -e 's/file_url=//g' -e 's/\"//g'  >>get2.gelbooru.txt
+  curl -b gelbooru.txt -# "http://gelbooru.com/index.php?page=dapi&s=post&q=index&tags=$tags&limit=1000&pid=$i" -A "$uag"|pcregrep -o -e 'file_url=[^ ]+'|sed -e 's/file_url=/http\:/g' -e 's/\"//g' >>get2.gelbooru.txt
 done;
 
 wget -nc -i get2.gelbooru.txt --referer="http://gelbooru.com/"
