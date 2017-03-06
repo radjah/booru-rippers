@@ -26,7 +26,7 @@ then
   echo Creating ${dirlet,,}/$savedir
   mkdir -p "${dirlet,,}/$savedir"
 else
-  dldr='/opt/wget/bin/wget -nc'
+  dldr='wget -nc'
 fi
 echo Entering ${dirlet,,}/$savedir
 cd ${dirlet,,}/$savedir
@@ -77,11 +77,10 @@ gensc () {
 # client_id и client_secret от приложения для iphone
 pixlogin () {
   echo Logging in...
-  AUTH=`curl -k -s -c pixiv.txt --data "username=${pixid}&password=${pixpass}&grant_type=password&client_id=bYGKuGVw91e0NMfPGp44euvGt59s&client_secret=HP3RmkgAmEGro0gn1x9ioawQE8WMfvLXDz3ZqxpK" https://oauth.secure.pixiv.net/auth/token -A "$uag"|pcregrep -o -e 'access_token\":\"[^\"]+'|sed 's#access_token":"##g'`
+  AUTH=`curl -k -s --data "username=${pixid}&password=${pixpass}&grant_type=password&client_id=bYGKuGVw91e0NMfPGp44euvGt59s&client_secret=HP3RmkgAmEGro0gn1x9ioawQE8WMfvLXDz3ZqxpK" https://oauth.secure.pixiv.net/auth/token -A "$uag"|pcregrep -o -e 'access_token\":\"[^\"]+'|sed 's#access_token":"##g'`
 
   # Проверка логина
-  checklog=`cat pixiv.txt |grep PHPSESSID|wc -l`
-  if [ $checklog -eq 0 ]
+  if [ -z $AUTH ]
   then
     echo ERROR: Проверьте логин и пароль
     rm pixiv.txt
@@ -160,11 +159,11 @@ then
   for i in `cat get.pixiv.anim.txt`
   do
     # Получение страницы
-    curl -# "http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$i" -b pixiv.txt --referer "http://www.pixiv.net/member_illust.php?mode=medium&illust_id=$i" -A "$uag" > out.ugo
+    curl -# "https://public-api.secure.pixiv.net/v1/works/$i.json?image_sizes=large" -H "Authorization: Bearer $AUTH" -A "$uag" > out.ugo
     # Получение ссылки
-    cat out.ugo|pcregrep --buffer-size=1M -o -e 'FullscreenData.+?\.zip'|pcregrep -o -e 'http.+'|sed 's/\\//g' >> get.pixiv.anim.dl.txt
-    # Сохранение информации для анимацией
-    cat out.ugo|pcregrep --buffer-size=1M -o -e 'ugokuIllustFullscreenData.*\}\]\}'|pcregrep -o -e 'frames.*\}\]\}'|sed -e 's#},{#\n#g' -e 's/frames\"\:\[{//g' -e 's/\}\]\}//g' > ${i}_ugoira1920x1080.txt
+    cat out.ugo|pcregrep -o -e '\"ugoira[^\"]+":"[^\"]+'|pcregrep -o -e 'http.+'|sed 's#_ugoira[^.]*#_ugoira1920x1080#g' >> get.pixiv.anim.dl.txt
+    # Сохранение информации для анимацией без имен файлов, но в нужном порядке
+    cat out.ugo|pcregrep -o -e '\"frames\"\:\[\{.+\}\]\}'|sed -e 's#},{#\n#g' -e 's#}]}##g' -e 's#\"frames\"\:\[{##g' > ${i}_ugoira1920x1080.txt
   done;
 fi
 
@@ -204,7 +203,7 @@ then
   pixlogin
   echo [*] Building list...
   getlist
-  echo [*] Processing illust and albums list...
+  echo [*] Processing list...
   procillist
   pixlogin
   echo [*] Processing animation list...
