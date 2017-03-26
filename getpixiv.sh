@@ -83,7 +83,6 @@ pixlogin () {
   if [ -z $AUTH ]
   then
     echo ERROR: Проверьте логин и пароль
-    rm pixiv.txt
     exit 2
   else
     echo OK
