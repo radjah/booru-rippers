@@ -70,14 +70,14 @@ finddups () {
 gensc () {
   # ярлык на страницу автора для общей кучи
   echo \[InternetShortcut\] > "$savedir.url"
-  echo URL=http\:\/\/www.pixiv.net\/member_illust.php\?id=$athid >> "$savedir.url"
+  echo URL=https\:\/\/www.pixiv.net\/member_illust.php\?id=$athid >> "$savedir.url"
 } # gensc
 
 # логинимся (куки в pixiv.txt, access_token в AUTH)
 # client_id и client_secret от приложения для iphone
 pixlogin () {
   echo Logging in...
-  AUTH=`curl -k -s --data "username=${pixid}&password=${pixpass}&grant_type=password&client_id=bYGKuGVw91e0NMfPGp44euvGt59s&client_secret=HP3RmkgAmEGro0gn1x9ioawQE8WMfvLXDz3ZqxpK" https://oauth.secure.pixiv.net/auth/token -A "$uag"|pcregrep -o -e 'access_token\":\"[^\"]+'|sed 's#access_token":"##g'`
+  AUTH=`curl --compressed -k -s --data "username=${pixid}&password=${pixpass}&grant_type=password&client_id=bYGKuGVw91e0NMfPGp44euvGt59s&client_secret=HP3RmkgAmEGro0gn1x9ioawQE8WMfvLXDz3ZqxpK" https://oauth.secure.pixiv.net/auth/token -A "$uag"|pcregrep -o -e 'access_token\":\"[^\"]+'|sed 's#access_token":"##g'`
 
   # Проверка логина
   if [ -z $AUTH ]
@@ -104,7 +104,7 @@ until [ $picnum -eq 0 ]
 do
   # страница для парсинга во временный файл
   echo Page $pagenum
-  curl -# "https://public-api.secure.pixiv.net/v1/users/$athid/works.json?image_sizes=large&page=$pagenum&per_page=100" -H "Authorization: Bearer $AUTH"|sed 's#},{#\n#g' > tmp.json.pixiv.txt
+  curl --compressed -# "https://public-api.secure.pixiv.net/v1/users/$athid/works.json?image_sizes=large&page=$pagenum&per_page=100" -H "Authorization: Bearer $AUTH"|sed 's#},{#\n#g' > tmp.json.pixiv.txt
   cat tmp.json.pixiv.txt|pcregrep --buffer-size 1M -o -e '\"id\"\:[^,]+\,\"title\"'|sort|uniq > out.tmp.txt
   # Сколько нашли на текущей странице?
   picnum=`cat out.tmp.txt|wc -l`
@@ -134,11 +134,11 @@ procillist () {
   for i in `cat get.pixiv.illist.txt`
   do
     echo Processing $i...
-    curl -# "https://public-api.secure.pixiv.net/v1/works/$i.json?image_sizes=large" -H "Authorization: Bearer $AUTH"|pcregrep --buffer-size 1M -o -e 'large\"\:\"[^\"]+'|sed 's#large":"##g'|sort|uniq >> get.pixiv.dl.txt
+    curl --compressed -# "https://public-api.secure.pixiv.net/v1/works/$i.json?image_sizes=large" -H "Authorization: Bearer $AUTH"|pcregrep --buffer-size 1M -o -e 'large\"\:\"[^\"]+'|sed 's#large":"##g'|sort|uniq >> get.pixiv.dl.txt
   done;
 
   # Скачивание
-  if [ -s get.pixiv.dl.txt ] 
+  if [ -s get.pixiv.dl.txt ]
   then
     $dldr -i get.pixiv.dl.txt --referer="http://www.pixiv.net/"
   fi
@@ -158,7 +158,7 @@ then
   for i in `cat get.pixiv.anim.txt`
   do
     # Получение страницы
-    curl -# "https://public-api.secure.pixiv.net/v1/works/$i.json?image_sizes=large" -H "Authorization: Bearer $AUTH" -A "$uag" > out.ugo
+    curl --compressed -# "https://public-api.secure.pixiv.net/v1/works/$i.json?image_sizes=large" -H "Authorization: Bearer $AUTH" -A "$uag" > out.ugo
     # Получение ссылки
     cat out.ugo|pcregrep -o -e '\"ugoira[^\"]+":"[^\"]+'|pcregrep -o -e 'http.+'|sed 's#_ugoira[^.]*#_ugoira1920x1080#g' >> get.pixiv.anim.dl.txt
     # Сохранение информации для анимацией без имен файлов, но в нужном порядке
@@ -169,13 +169,13 @@ fi
 # Скачивание
 if [ -s get.pixiv.anim.dl.txt ] 
 then
-  $dldr -i get.pixiv.anim.dl.txt --referer="http://www.pixiv.net/"
+  wget -nc -i get.pixiv.anim.dl.txt --referer="http://www.pixiv.net/"
 fi
 
 } # procanim
 
 
-# удаляем мусор
+# Удаляем мусор
 rmtrash () {
 if [ ! $1 ]
 then
@@ -193,7 +193,6 @@ trap rmtrash 1 2 3 15
 exec < .
 flock -n 0
 
-
 # Если никто каталог не занял, то работаем
 
 if [ $? -eq 0 ]
@@ -202,7 +201,7 @@ then
   pixlogin
   echo [*] Building list...
   getlist
-  echo [*] Processing list...
+  echo [*] Processing illust and albums list...
   procillist
   pixlogin
   echo [*] Processing animation list...
