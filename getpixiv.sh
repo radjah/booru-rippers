@@ -42,13 +42,11 @@ else
   exit 5
 fi
 
-
 # поиск и удаление дублей
 finddups () {
-# Список скаченного
+  # Список скаченного
   ls *.jp*g *.png *.gif|grep -v big|grep _|sed 's/_.*//g'|sort|uniq > downloaded.pixiv.txt
-
-# Список совпадающего из старья
+  # Список совпадающего из старья
   if [ -s downloaded.pixiv.txt ]
   then
     cat downloaded.pixiv.txt | while read i
@@ -56,8 +54,7 @@ finddups () {
       ls ${i}.* ${i}_big* 2>/dev/null >> fordel.pixiv.txt
     done;
   fi
-
-# Удаление
+  # Удаление
   if [ -s fordel.pixiv.txt ]
   then
     cat fordel.pixiv.txt|xargs -l1 rm
@@ -77,7 +74,6 @@ gensc () {
 pixlogin () {
   echo Logging in...
   AUTH=`curl --compressed -k -s --data "username=${pixid}&password=${pixpass}&grant_type=password&client_id=bYGKuGVw91e0NMfPGp44euvGt59s&client_secret=HP3RmkgAmEGro0gn1x9ioawQE8WMfvLXDz3ZqxpK" https://oauth.secure.pixiv.net/auth/token -A "$uag"|pcregrep -o -e 'access_token\":\"[^\"]+'|sed 's#access_token":"##g'`
-
   # Проверка логина
   if [ -z $AUTH ]
   then
@@ -91,7 +87,6 @@ pixlogin () {
 # функция получения имени пользователя
 
 getaccname() {
-  echo $AUTH
   savedir=`curl --compressed -# "https://app-api.pixiv.net/v1/user/detail?user_id=$athid" -H "Authorization: Bearer $AUTH"|pcregrep -o -e '\"account\":\"[^\"]*'|sed 's#"account":"##g'`
   echo Found username: $savedir
 } # getaccname
@@ -136,29 +131,24 @@ done;
 
 procillist () {
   touch get.pixiv.dl.txt
-
   # Обрабатываем все найденные ID
   for i in `cat get.pixiv.illist.txt`
   do
     echo Processing $i...
     curl --compressed -# "https://public-api.secure.pixiv.net/v1/works/$i.json?image_sizes=large" -H "Authorization: Bearer $AUTH"|pcregrep --buffer-size 1M -o -e 'large\"\:\"[^\"]+'|sed 's#large":"##g'|sort|uniq >> get.pixiv.dl.txt
   done;
-
   # Скачивание
   if [ -s get.pixiv.dl.txt ]
   then
     $dldr -i get.pixiv.dl.txt --referer="http://www.pixiv.net/"
   fi
-
 } # procillist
-
 
 ######################
 # Архивы с анимацией #
 ######################
 
 procanim () {
-
 # Здесь важны только id
 if [ -s get.pixiv.anim.txt ]
 then
@@ -178,9 +168,7 @@ if [ -s get.pixiv.anim.dl.txt ]
 then
   wget -nc -i get.pixiv.anim.dl.txt --referer="http://www.pixiv.net/"
 fi
-
 } # procanim
-
 
 # удаляем мусор
 rmtrash () {
@@ -225,7 +213,7 @@ then
     rmtrash $3
     flock -u 0
     echo [*] FINISHED!
-    echo [*] Ripped ID=$athid to $savedir
+    echo [*] Ripped ID=$athid to ${dirlet,,}/$savedir
   fi
   else
     echo [!] ERROR! Каталог сохранения уже обрабатывается!
