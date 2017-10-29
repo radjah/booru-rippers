@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Переменные
-uag="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:51.0) Gecko/20100101 Firefox/51.0"
+uag="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:56.0) Gecko/20100101 Firefox/56.0"
 
 # Проверка параметров
 athid=$1
@@ -195,26 +195,22 @@ trap rmtrash 1 2 3 15
 
 # Обработка всего и вся
 
-# Блокировка
-
-exec < .
-flock -n 0
-
-
-# Если никто каталог не занял, то работаем
-
-if [ $? -eq 0 ]
+pixlogin
+# если каталог сохранения не указан, то получаем его с помощь API
+if [ -z $savedir ]
 then
-  pixlogin
-  # если каталог сохранения не указан, то получаем его с помощь API
-  if [ -z $savedir ]
+  getaccname
+fi
+# если каталог получили, то начинаем работу
+if [ ! -z $savedir ]
+then
+  createdir
+  # Блокировка
+  exec < .
+  flock -n 0
+  # Если никто каталог не занял, то работаем
+  if [ $? -eq 0 ]
   then
-    getaccname
-  fi
-  # если каталог получили, то начинаем работу
-  if [ ! -z $savedir ]
-  then
-    createdir
     gensc
     echo [*] Building list...
     getlist
@@ -229,8 +225,9 @@ then
     rmtrash $3
     flock -u 0
     echo [*] FINISHED!
+    echo [*] Ripped ID=$athid to $savedir
   fi
-else
-  echo [!] ERROR! Каталог сохранения уже обрабатывается!
-  exit 4
+  else
+    echo [!] ERROR! Каталог сохранения уже обрабатывается!
+    exit 4
 fi
