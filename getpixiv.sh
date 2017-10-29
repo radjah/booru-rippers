@@ -6,30 +6,29 @@ uag="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:51.0) Gecko/20100101 Firefox/5
 # Проверка параметров
 athid=$1
 savedir=$2
-if [ "$savedir" = "" ]
+if [ "$athid" = "" ]
 then
-  if [ "$athid" = "" ]
-  then
-    echo Не указан ID художника и каталог!
-  fi
-  echo Использование: `basename $0` id_художника каталог
+  echo Не указан ID художника!
+  echo Использование: `basename $0` id_художника [каталог]
   exit 1
 fi
 
 # Качалка
 dldr='aria2c --always-resume=false --max-resume-failure-tries=0 --remote-time'
-dirlet=`echo $savedir|cut -c-1`
 
 # Каталог для сохранения
-if [ ! -d ${dirlet,,}/$savedir ]
-then
-  echo Creating ${dirlet,,}/$savedir
-  mkdir -p "${dirlet,,}/$savedir"
-else
-  dldr='wget -nc'
-fi
-echo Entering ${dirlet,,}/$savedir
-cd ${dirlet,,}/$savedir
+createdir () {
+  dirlet=`echo $savedir|cut -c-1`
+  if [ ! -d ${dirlet,,}/$savedir ]
+  then
+    echo Creating ${dirlet,,}/$savedir
+    mkdir -p "${dirlet,,}/$savedir"
+  else
+    dldr='wget -nc'
+  fi
+  echo Entering ${dirlet,,}/$savedir
+  cd ${dirlet,,}/$savedir
+} # createdir
 
 # Проверка конфига
 if [ -f ~/.config/boorulogins.conf ]
@@ -88,6 +87,14 @@ pixlogin () {
     echo OK
   fi
 } # pixlogin
+
+# функция получения имени пользователя
+
+getaccname() {
+  echo $AUTH
+  savedir=`curl --compressed -# "https://app-api.pixiv.net/v1/user/detail?user_id=$athid" -H "Authorization: Bearer $AUTH"|pcregrep -o -e '\"account\":\"[^\"]*'|sed 's#"account":"##g'`
+  echo Found username: $savedir
+} # getaccname
 
 # функция для получения списков
 getlist () {
@@ -175,7 +182,7 @@ fi
 } # procanim
 
 
-# Удаляем мусор
+# удаляем мусор
 rmtrash () {
 if [ ! $1 ]
 then
@@ -193,25 +200,36 @@ trap rmtrash 1 2 3 15
 exec < .
 flock -n 0
 
+
 # Если никто каталог не занял, то работаем
 
 if [ $? -eq 0 ]
 then
-  gensc
   pixlogin
-  echo [*] Building list...
-  getlist
-  echo [*] Processing illust and albums list...
-  procillist
-  pixlogin
-  echo [*] Processing animation list...
-  procanim
-  echo [*] Removing dups...
-  finddups
-  echo [*] Removing trash...
-  rmtrash $3
-  flock -u 0
-  echo [*] FINISHED!
+  # если каталог сохранения не указан, то получаем его с помощь API
+  if [ -z $savedir ]
+  then
+    getaccname
+  fi
+  # если каталог получили, то начинаем работу
+  if [ ! -z $savedir ]
+  then
+    createdir
+    gensc
+    echo [*] Building list...
+    getlist
+    echo [*] Processing illust and albums list...
+    procillist
+    pixlogin
+    echo [*] Processing animation list...
+    procanim
+    echo [*] Removing dups...
+    finddups
+    echo [*] Removing trash...
+    rmtrash $3
+    flock -u 0
+    echo [*] FINISHED!
+  fi
 else
   echo [!] ERROR! Каталог сохранения уже обрабатывается!
   exit 4
