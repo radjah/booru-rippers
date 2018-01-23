@@ -57,7 +57,7 @@ until [ $picnum -eq 0 ]
 do
   # Получение списка
   echo Page $pagenum
-  curl -# "http://$danlogin:$danapikey@danbooru.donmai.us/posts.json?tags=$tags&limit=100&page=$pagenum" -A "$uag"|pcregrep --buffer-size 1M -o -e '\"file_url\":\"[^\"]+'|sed -e 's/\"file_url\":\"/http\:\/\/danbooru\.donmai\.us/g' -e 's/\"//g' -e 's/--.*--//g' -e 's/__.*__//g' > tmp.danbooru.txt
+  curl -# "http://$danlogin:$danapikey@danbooru.donmai.us/posts.json?tags=$tags&limit=100&page=$pagenum" -A "$uag"|pcregrep --buffer-size 1M -o -e '\"file_url\":\"[^\"]+'|sed -e 's#"file_url":"/#https://danbooru.donmai.us/#g' -e 's/\"//g' -e 's/--.*--//g' -e 's/__.*__//g'|sed  -e 's#file_url:##g' > tmp.danbooru.txt
   picnum=`cat tmp.danbooru.txt|wc -l`
   if [ $picnum \> 0 ]
   then
