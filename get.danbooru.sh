@@ -1,7 +1,7 @@
 ﻿#!/bin/bash
 
 # Юзергаент
-uag="Mozilla/5.0 (Windows NT 6.3; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0"
+uag="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:56.0) Gecko/20100101 Firefox/56.0"
 
 # Проверка параметров
 if [ ! "$2" = "" ]
@@ -57,7 +57,7 @@ until [ $picnum -eq 0 ]
 do
   # Получение списка
   echo Page $pagenum
-  curl $torproxy -# "http://$danlogin:$danapikey@danbooru.donmai.us/posts.json?tags=$tags&limit=200&page=$pagenum" -A "$uag"|pcregrep --buffer-size 1M -o -e '\"file_url\":\"[^\"]+'|sed \
+  curl -# "http://$danlogin:$danapikey@danbooru.donmai.us/posts.json?tags=$tags&limit=200&page=$pagenum" -A "$uag"|pcregrep --buffer-size 1M -o -e '\"file_url\":\"[^\"]+'|sed \
   -e 's#"file_url":"data#https://danbooru.donmai.us/data#g'      \
   -e 's#"file_url":"/data#https://danbooru.donmai.us/data#g'     \
   -e 's#"file_url":"/cached#https://danbooru.donmai.us/cached#g' \
