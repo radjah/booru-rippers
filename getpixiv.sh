@@ -196,8 +196,9 @@ then
   # Блокировка
   exec < .
   flock -n 0
+  flres=$?
   # Если никто каталог не занял, то работаем
-  if [ $? -eq 0 ]
+  if [ $flres -eq 0 ]
   then
     gensc
     echo [*] Building list...
@@ -214,8 +215,8 @@ then
     flock -u 0
     echo [*] FINISHED!
     echo [*] Ripped ID=$athid to ${dirlet,,}/$savedir
-  fi
   else
     echo [!] ERROR! Каталог сохранения уже обрабатывается!
     exit 4
+  fi
 fi
