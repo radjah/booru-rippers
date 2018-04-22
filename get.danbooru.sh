@@ -57,7 +57,7 @@ until [ $picnum -eq 0 ]
 do
   # Получение списка
   echo Page $pagenum
-  curl -# "http://$danlogin:$danapikey@danbooru.donmai.us/posts.json?tags=$tags&limit=200&page=$pagenum" -A "$uag"|pcregrep --buffer-size 1M -o -e '\"file_url\":\"[^\"]+'|sed \
+  curl -# -k "https://danbooru.donmai.us/posts.json?tags=$tags&limit=200&page=$pagenum" -u $danlogin:$danapikey -A "$uag"|pcregrep --buffer-size 1M -o -e '\"file_url\":\"[^\"]+'|sed \
   -e 's#"file_url":"data#https://danbooru.donmai.us/data#g'      \
   -e 's#"file_url":"/data#https://danbooru.donmai.us/data#g'     \
   -e 's#"file_url":"/cached#https://danbooru.donmai.us/cached#g' \
