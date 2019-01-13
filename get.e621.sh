@@ -30,7 +30,7 @@ echo Entering $savedir
 cd "$savedir"
 
 # Количество постов
-postcount=`curl -# "https://e621.net/post/index.xml?tags=$tags&limit=1"|pcregrep -o 'posts\ count=\"[^"]+'|sed -e 's/posts\ count=//' -e 's/\"//'`
+postcount=`curl -# "https://e621.net/post/index.xml?tags=$tags&limit=1" -A "$uag"|pcregrep -o 'posts\ count=\"[^"]+'|sed -e 's/posts\ count=//' -e 's/\"//'`
 echo $postcount posts
 
 # Проверка количетсва
