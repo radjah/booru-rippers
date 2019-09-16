@@ -1,7 +1,10 @@
 #!/bin/bash
 
 # Переменные
-uag="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:56.0) Gecko/20100101 Firefox/56.0"
+uag="PixivAndroidApp/5.0.156 (Android 9; ONEPLUS A6013)"
+client_id="MOBrBDS8blbauoSck0ZfDbtuzpyT"
+client_secret="lsACyCD94FhDUtGTXi3QzcFE2uU1hqtDaKeqrdwj"
+hash_secret="28c1fdd170a5204386cb1313c7077b34f83e4aaf4aa829ce78c231e05b0bae2c"
 
 # Проверка параметров
 athid=$1
@@ -72,8 +75,19 @@ gensc () {
 # логинимся (куки в pixiv.txt, access_token в AUTH)
 # client_id и client_secret от приложения для iphone
 pixlogin () {
-  echo Logging in...
-  AUTH=`curl --compressed -k -s --data "username=${pixid}&password=${pixpass}&grant_type=password&client_id=bYGKuGVw91e0NMfPGp44euvGt59s&client_secret=HP3RmkgAmEGro0gn1x9ioawQE8WMfvLXDz3ZqxpK" https://oauth.secure.pixiv.net/auth/token -A "$uag"|pcregrep -o -e 'access_token\":\"[^\"]+'|sed 's#access_token":"##g'`
+  echo -n Logging in...
+  DTH=`date --iso-8601=seconds`
+  DTHASH=`echo -n $DTH$hash_secret | md5sum | cut -d' ' -f 1`
+  AUTHJS=`curl --compressed -k -s -H "Accept-Language: en_US" \
+                              -H "X-Client-Time: $DTH" \
+                              -H "X-Client-Hash: $DTHASH" \
+                              -H "app-os: android" \
+                              -H "app-os-version: 5.0.156" \
+  --data "get_secure_url=true&client_id=${client_id}&client_secret=${client_secret}&grant_type=password&username=${pixid}&password=${pixpass}" \
+  https://oauth.secure.pixiv.net/auth/token -A "$uag"` 
+  AUTH=`echo $AUTHJS | pcregrep -o -e 'access_token\":\"[^\"]+'|sed 's#access_token":"##g'`
+  AUTHREF=`echo $AUTHJS | pcregrep -o -e 'refresh_token\":\"[^\"]+'|sed 's#refresh_token":"##g'`
+  AUTHDEV=`echo $AUTHJS | pcregrep -o -e 'device_token\":\"[^\"]+'|sed 's#device_token":"##g'`
   # Проверка логина
   if [ -z $AUTH ]
   then
@@ -83,6 +97,29 @@ pixlogin () {
     echo OK
   fi
 } # pixlogin
+
+# Обнвление refresh_token
+refreshlogin () {
+  echo -n Refresh login...
+  DTH=`date --iso-8601=seconds`
+  DTHASH=`echo -n $DTH$hash_secret | md5sum | cut -d' ' -f 1`
+  AUTHJS=`curl --compressed -k -s -H "Accept-Language: en_US" \
+                              -H "X-Client-Time: $DTH" \
+                              -H "X-Client-Hash: $DTHASH" \
+                              -H "app-os: android" \
+                              -H "app-os-version: 5.0.156" \
+  --data "get_secure_url=true&client_id=${client_id}&client_secret=${client_secret}&grant_type=refresh_token&refresh_token=$AUTHREF" \
+  https://oauth.secure.pixiv.net/auth/token -A "$uag"` 
+  AUTH=`echo $AUTHJS | pcregrep -o -e 'access_token\":\"[^\"]+'|sed 's#access_token":"##g'`
+  AUTHREF=`echo $AUTHJS | pcregrep -o -e 'refresh_token\":\"[^\"]+'|sed 's#refresh_token":"##g'`
+  # Проверка логина
+  if [ -z $AUTH ]
+  then
+    pixlogin
+  else
+    echo OK
+  fi
+} # refreshlogin
 
 # функция получения имени пользователя
 
@@ -205,7 +242,7 @@ then
     getlist
     echo [*] Processing illust and albums list...
     procillist
-    pixlogin
+    refreshlogin
     echo [*] Processing animation list...
     procanim
     echo [*] Removing dups...
