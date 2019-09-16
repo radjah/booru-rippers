@@ -94,6 +94,7 @@ pixlogin () {
     echo ERROR: Проверьте логин и пароль
     exit 2
   else
+    echo AUTHREF=$AUTHREF > ~/.config/pixivtoken.conf
     echo OK
   fi
 } # pixlogin
@@ -101,23 +102,30 @@ pixlogin () {
 # Обнвление refresh_token
 refreshlogin () {
   echo -n Refresh login...
-  DTH=`date --iso-8601=seconds`
-  DTHASH=`echo -n $DTH$hash_secret | md5sum | cut -d' ' -f 1`
-  AUTHJS=`curl --compressed -k -s -H "Accept-Language: en_US" \
-                              -H "X-Client-Time: $DTH" \
-                              -H "X-Client-Hash: $DTHASH" \
-                              -H "app-os: android" \
-                              -H "app-os-version: 5.0.156" \
-  --data "get_secure_url=true&client_id=${client_id}&client_secret=${client_secret}&grant_type=refresh_token&refresh_token=$AUTHREF" \
-  https://oauth.secure.pixiv.net/auth/token -A "$uag"` 
-  AUTH=`echo $AUTHJS | pcregrep -o -e 'access_token\":\"[^\"]+'|sed 's#access_token":"##g'`
-  AUTHREF=`echo $AUTHJS | pcregrep -o -e 'refresh_token\":\"[^\"]+'|sed 's#refresh_token":"##g'`
-  # Проверка логина
-  if [ -z $AUTH ]
+  if [ -f ~/.config/pixivtoken.conf ]
   then
-    pixlogin
+    . ~/.config/pixivtoken.conf
+    DTH=`date --iso-8601=seconds`
+    DTHASH=`echo -n $DTH$hash_secret | md5sum | cut -d' ' -f 1`
+    AUTHJS=`curl --compressed -k -s -H "Accept-Language: en_US" \
+                                    -H "X-Client-Time: $DTH" \
+                                    -H "X-Client-Hash: $DTHASH" \
+                                    -H "app-os: android" \
+                                    -H "app-os-version: 5.0.156" \
+    --data "get_secure_url=true&client_id=${client_id}&client_secret=${client_secret}&grant_type=refresh_token&refresh_token=$AUTHREF" \
+    https://oauth.secure.pixiv.net/auth/token -A "$uag"` 
+    AUTH=`echo $AUTHJS | pcregrep -o -e 'access_token\":\"[^\"]+'|sed 's#access_token":"##g'`
+    AUTHREF=`echo $AUTHJS | pcregrep -o -e 'refresh_token\":\"[^\"]+'|sed 's#refresh_token":"##g'`
+    # Проверка логина
+    if [ -z $AUTH ]
+    then
+      pixlogin
+    else
+      echo AUTHREF=$AUTHREF > ~/.config/pixivtoken.conf
+      echo OK
+    fi
   else
-    echo OK
+    pixlogin
   fi
 } # refreshlogin
 
@@ -220,7 +228,7 @@ trap rmtrash 1 2 3 15
 
 # Обработка всего и вся
 
-pixlogin
+refreshlogin
 # если каталог сохранения не указан, то получаем его с помощь API
 if [ -z $savedir ]
 then
