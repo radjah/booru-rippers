@@ -120,6 +120,8 @@ id\_автора - значение параметра "id" в URL вида "htt
 > 
 > pixpass=ВАШ ПАРОЛЬ
 
+Во время работы скрипта API-токен сохраняется в файл ~/.config/pixivtoken.conf.
+
 ## getseiga.sh ##
 Качалка для сайта [http://seiga.nicovideo.jp](http://seiga.nicovideo.jp)
 
