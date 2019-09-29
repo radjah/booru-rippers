@@ -57,3 +57,6 @@ do
 done;
 
 wget -nc -i get2.gelbooru.txt --referer="https://gelbooru.com/" --no-check-certificate
+
+echo Finished!
+echo $tags \=\> $savedir

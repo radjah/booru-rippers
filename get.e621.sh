@@ -69,3 +69,6 @@ done;
 wget --no-check-certificate -nc -i get.e621.txt
 
 rm -f tmp.e621.txt
+
+echo Finished!
+echo $tags \=\> $savedir

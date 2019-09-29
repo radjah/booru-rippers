@@ -63,3 +63,6 @@ paste -d "." get2.yandere.md5.txt get2.yandere.ext.txt > get2.yandere.txt
 wget --no-check-certificate -nc -i get2.yandere.txt
 
 rm -f get2.yandere.*.txt
+
+echo Finished!
+echo $tags \=\> $savedir

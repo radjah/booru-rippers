@@ -93,7 +93,7 @@ do
   then
     # Запоминаем
     cat out.txt >> get.seiga.all.txt
-    let "pagenum++"
+    pagenum=`expr $pagenum + 1`
   fi
 done;
 

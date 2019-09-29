@@ -68,3 +68,6 @@ aria2c --allow-overwrite=true --auto-file-renaming=false --conditional-get=true 
 
 # убираем за собой
 rm -f tmp.sankaku.txt
+
+echo Finished!
+echo $tags \=\> $savedir

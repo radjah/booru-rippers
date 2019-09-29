@@ -87,3 +87,6 @@ wget -U "$uag" -nc -i get.danbooru.txt
 
 # уборка
 rm -f tmp.danbooru.txt
+
+echo Finished!
+echo $tags \=\> $savedir

@@ -64,3 +64,6 @@ paste -d "." get2.konachan.md5.txt get2.konachan.ext.txt > get2.konachan.txt
 wget -nc -i get2.konachan.txt
 
 rm -f get2.konachan.*.txt
+
+echo Finished!
+echo $tags \=\> $savedir

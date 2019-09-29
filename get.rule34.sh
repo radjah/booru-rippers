@@ -56,3 +56,6 @@ do
 done;
 
 wget -nc -i get2.rule34.txt --referer="https://rule34.xxx/" --no-check-certificate
+
+echo Finished!
+echo $tags \=\> $savedir
