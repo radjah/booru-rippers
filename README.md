@@ -26,7 +26,7 @@ Bash-скрипты для выкачивания подборок по авто
 Файл ~/.config/boorulogins.conf используется всеми скриптами, для работы которых требуется авторизация. Названия параметров и требуемые значения указаны в описании к каждому скрипту.
 
 ## get.danbooru.sh ##
-Качалка для сайта [http://danbooru.donmai.us/](http://danbooru.donmai.us/).
+Качалка для сайта [https://danbooru.donmai.us/](https://danbooru.donmai.us/).
 
 **Использование:**
 > get.danbooru.sh набор\_тегов [каталог\_для\_сохранения]
@@ -50,7 +50,7 @@ API-ключ находится на странице профиля.
 Если второй параметр не указан, то он принимается равным первому.
 
 ## get.gelbooru.sh ##
-Качалка для сайта [http://gelbooru.com/](http://gelbooru.com/).
+Качалка для сайта [https://gelbooru.com/](https://gelbooru.com/).
 
 **Использование:**
 > get.gelbooru.sh набор\_тегов [каталог\_для\_сохранения]
@@ -64,7 +64,7 @@ API-ключ находится на странице профиля.
 > gelpass=ВАШ ПАРОЛЬ
 
 ## get.konachan.sh ##
-Качалка для сайта [http://konachan.com/](http://konachan.com/).
+Качалка для сайта [https://konachan.com/](https://konachan.com/).
 
 **Использование:**
 > get.konachan.sh набор\_тегов [каталог\_для\_сохранения]
@@ -102,13 +102,13 @@ API-ключ находится на странице профиля.
 Если второй параметр не указан, то он принимается равным первому.
 
 ## getpixiv.sh ##
-Качалка для сайта [http://www.pixiv.net](http://www.pixiv.net).
+Качалка для сайта [https://www.pixiv.net](https://www.pixiv.net).
 Умеет блокировать (flock) каталог, в который производится закачка, удалять дубли после закачки.
 
 **Использование:**
 > getpixiv.sh id\_автора каталог\_для\_сохранения [флаг]
 
-id\_автора - значение параметра "id" в URL вида "http://www.pixiv.net/member_illust.php?id=12345" или "http://www.pixiv.net/member.php?id=12345"
+id\_автора - значение параметра "id" в URL вида "https://www.pixiv.net/member_illust.php?id=12345" или "https://www.pixiv.net/member.php?id=12345"
 
 каталог\_для\_сохранения - каталог, в который скрипт будет закачивать изображения. Будет создан каталог "первая\_буква/каталог\_для\_сохранения"
 
@@ -123,12 +123,12 @@ id\_автора - значение параметра "id" в URL вида "htt
 Во время работы скрипта API-токен сохраняется в файл ~/.config/pixivtoken.conf.
 
 ## getseiga.sh ##
-Качалка для сайта [http://seiga.nicovideo.jp](http://seiga.nicovideo.jp)
+Качалка для сайта [https://seiga.nicovideo.jp](https://seiga.nicovideo.jp)
 
 **Использование:**
 > getseiga.sh id\_автора каталог\_для\_сохранения [флаг]
 
-id\_автора - число после "/illust/" в URL вида "http://seiga.nicovideo.jp/user/illust/12345"
+id\_автора - число после "/illust/" в URL вида "https://seiga.nicovideo.jp/user/illust/12345"
 
 каталог\_для\_сохранения - каталог, в который скрипт будет закачивать изображения. Будет создан каталог "seiga/первая\_буква/каталог\_для\_сохранения"
 
@@ -142,4 +142,4 @@ id\_автора - число после "/illust/" в URL вида "http://seig
 
 # Примечание #
 
-Все скрипты требуют наличия в системе pcregrep, curl, wget, aria2c и coreutils не ниже 8.21.
+Скрипты требуют наличия в системе jq, pcregrep, curl, wget, aria2c и coreutils не ниже 8.21.
