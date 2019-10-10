@@ -122,6 +122,26 @@ id\_автора - значение параметра "id" в URL вида "htt
 
 Во время работы скрипта API-токен сохраняется в файл ~/.config/pixivtoken.conf.
 
+## ugoira-to-mp4.sh ##
+Качалка и конвертер анимации с сайта [https://www.pixiv.net](https://www.pixiv.net).
+
+**Использование:**
+> ugoira-to-mp4.sh id\_поста
+
+id\_поста - число в конце URL страницы с анимацией вида https://www.pixiv.net/en/artworks/74931962
+
+Преобразование происходе во временном каталоге внутри /tmp. Результирующий файл сохраняется под именем "id\_поста.mp4" в текущем каталоге.
+
+**Конфиг:**
+
+> pixid=ВАШ ЛОГИН
+> 
+> pixpass=ВАШ ПАРОЛЬ
+
+Во время работы скрипта API-токен сохраняется в файл ~/.config/pixivtoken.conf.
+
+Для своей работы скрипт использует утилиту convert из состава ImageMagick.
+
 ## getseiga.sh ##
 Качалка для сайта [https://seiga.nicovideo.jp](https://seiga.nicovideo.jp)
 
