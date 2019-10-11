@@ -6,14 +6,17 @@ client_id="MOBrBDS8blbauoSck0ZfDbtuzpyT"
 client_secret="lsACyCD94FhDUtGTXi3QzcFE2uU1hqtDaKeqrdwj"
 hash_secret="28c1fdd170a5204386cb1313c7077b34f83e4aaf4aa829ce78c231e05b0bae2c"
 
-# Проверка параметров
 ugoid=$1
+
+# Проверка параметров
+checkparam () {
 if [ "$ugoid" = "" ]
 then
   echo Не указан ID анимации!
-  echo Использование: `basename $0` id_анимации
+  echo Использование: $(basename $0) id_анимации
   exit 1
 fi
+} # checkparam
 
 # Проверка конфига
 checkcfg () {
@@ -32,18 +35,18 @@ checkcfg () {
 # логинимся (access_token в AUTH, refresh_token в AUTHREF)
 pixlogin () {
   echo -n Logging in...
-  DTH=`date --iso-8601=seconds`
-  DTHASH=`echo -n $DTH$hash_secret | md5sum | cut -d' ' -f 1`
-  AUTHJS=`curl --compressed -k -s -H "Accept-Language: en_US" \
+  DTH=$(date --iso-8601=seconds)
+  DTHASH=$(echo -n $DTH$hash_secret | md5sum | cut -d' ' -f 1)
+  AUTHJS=$(curl --compressed -k -s -H "Accept-Language: en_US" \
                               -H "X-Client-Time: $DTH" \
                               -H "X-Client-Hash: $DTHASH" \
                               -H "app-os: android" \
                               -H "app-os-version: 5.0.156" \
   --data "get_secure_url=true&client_id=${client_id}&client_secret=${client_secret}&grant_type=password&username=${pixid}&password=${pixpass}" \
-  https://oauth.secure.pixiv.net/auth/token -A "$uag"` 
-  AUTH=`echo $AUTHJS | jq -r ".response.access_token"`
-  AUTHREF=`echo $AUTHJS | jq -r ".response.refresh_token"`
-  AUTHDEV=`echo $AUTHJS | jq -r ".response.device_token"`
+  https://oauth.secure.pixiv.net/auth/token -A "$uag")
+  AUTH=$(echo $AUTHJS | jq -r ".response.access_token")
+  AUTHREF=$(echo $AUTHJS | jq -r ".response.refresh_token")
+  AUTHDEV=$(echo $AUTHJS | jq -r ".response.device_token")
   # Проверка логина
   if [ -z $AUTH ]
   then
@@ -61,17 +64,17 @@ refreshlogin () {
   if [ -f ~/.config/pixivtoken.conf ]
   then
     . ~/.config/pixivtoken.conf
-    DTH=`date --iso-8601=seconds`
-    DTHASH=`echo -n $DTH$hash_secret | md5sum | cut -d' ' -f 1`
-    AUTHJS=`curl --compressed -k -s -H "Accept-Language: en_US" \
+    DTH=$(date --iso-8601=seconds)
+    DTHASH=$(echo -n $DTH$hash_secret | md5sum | cut -d' ' -f 1)
+    AUTHJS=$(curl --compressed -k -s -H "Accept-Language: en_US" \
                                     -H "X-Client-Time: $DTH" \
                                     -H "X-Client-Hash: $DTHASH" \
                                     -H "app-os: android" \
                                     -H "app-os-version: 5.0.156" \
     --data "get_secure_url=true&client_id=${client_id}&client_secret=${client_secret}&grant_type=refresh_token&refresh_token=$AUTHREF" \
-    https://oauth.secure.pixiv.net/auth/token -A "$uag"` 
-    AUTH=`echo $AUTHJS | jq -r ".response.access_token"`
-    AUTHREF=`echo $AUTHJS | jq -r ".response.refresh_token"`
+    https://oauth.secure.pixiv.net/auth/token -A "$uag")
+    AUTH=$(echo $AUTHJS | jq -r ".response.access_token")
+    AUTHREF=$(echo $AUTHJS | jq -r ".response.refresh_token")
     # Проверка логина
     if [ -z $AUTH ]
     then
@@ -94,10 +97,10 @@ procanim () {
   # Получение страницы
   curl --compressed -# "https://public-api.secure.pixiv.net/v1/works/$ugoid.json?image_sizes=large" -H "Authorization: Bearer $AUTH" -A "$uag" > out.ugo
   # Проверка типа
-  posttype=`cat out.ugo|jq -r '.response[].type'`
+  posttype=$(cat out.ugo|jq -r '.response[].type')
   if [[ $posttype != "ugoira" ]]
   then
-    echo Неправильный тип пост по ID $ugoid
+    echo Неправильный тип поста по ID $ugoid\: $posttype
     cleantmp
     exit 3
   fi
@@ -112,7 +115,7 @@ procanim () {
 convertugo () {
   if [ -f ${ugoid}_ugoira1920x1080.txt ]
   then
-    arrdelay=(`cat ${ugoid}_ugoira1920x1080.txt | jq -r .delay_msec`)
+    arrdelay=($(cat ${ugoid}_ugoira1920x1080.txt | jq -r .delay_msec))
   else
     echo Файл с описанием кадров ${ugoid}_ugoira1920x1080.txt не найден!
     cleantmp
@@ -123,7 +126,7 @@ convertugo () {
     echo Extracting...
     cd files
     unzip ../${ugoid}_ugoira1920x1080.zip
-    arrfile=(`ls *`)
+    arrfile=($(ls *))
   else
     echo Архив ${ugoid}_ugoira1920x1080.zip не найден!
     cleantmp
@@ -145,19 +148,29 @@ convertugo () {
   fi
 }
 
+# удаление мусора
 cleantmp () {
   cd $curdir
   rm -rf $tmpdir
 } # cleantmp
 
+# Обработка
+
+checkparam
 checkcfg
 refreshlogin
 
 # каталоги
 curdir="$(pwd)"
-tmpdir="`mktemp -d`"
-cd $tmpdir
-mkdir files
+tmpdir="$(mktemp -d)"
+if [ ! -z $tmpdir ] && [ -d $tmpdir ]
+then
+  cd $tmpdir
+  mkdir files
+else
+  echo Ошибка создания временного каталога!
+  exit 3
+fi
 
 procanim
 convertugo

@@ -6,34 +6,44 @@ client_id="MOBrBDS8blbauoSck0ZfDbtuzpyT"
 client_secret="lsACyCD94FhDUtGTXi3QzcFE2uU1hqtDaKeqrdwj"
 hash_secret="28c1fdd170a5204386cb1313c7077b34f83e4aaf4aa829ce78c231e05b0bae2c"
 
-# Проверка параметров
 athid=$1
 savedir=$2
+
+# Проверка параметров
+checkparam () {
 if [ "$athid" = "" ]
 then
   echo Не указан ID художника!
-  echo Использование: `basename $0` id_художника [каталог]
+  echo Использование: $(basename $0) id_художника [каталог]
   exit 1
 fi
+} # checkparam
 
 # Качалка
 dldr='aria2c --always-resume=false --max-resume-failure-tries=0 --remote-time'
 
 # Каталог для сохранения
 createdir () {
-  dirlet=`echo $savedir|cut -c-1`
-  if [ ! -d ${dirlet,,}/$savedir ]
+  dirlet=$(echo -n $savedir|cut -c-1)
+  if [ ! -d $dirlet/$savedir ]
   then
-    echo Creating ${dirlet,,}/$savedir...
-    mkdir -p "${dirlet,,}/$savedir"
+    echo Creating $dirlet/$savedir...
+    mkdir -p "$dirlet/$savedir"
   else
     dldr='wget -nc'
   fi
-  echo Entering ${dirlet,,}/$savedir
-  cd "${dirlet,,}/$savedir"
+  if [ -d $dirlet/$savedir ]
+  then
+    echo Entering $dirlet/$savedir...
+    cd "$dirlet/$savedir"
+  else
+    echo Ошибка создания каталога для сохранения!
+    exit 3
+  fi
 } # createdir
 
 # Проверка конфига
+checkcfg () {
 if [ -f ~/.config/boorulogins.conf ]
 then
   . ~/.config/boorulogins.conf
@@ -44,6 +54,7 @@ else
   echo pixpass=ВАШ ПАРОЛЬ
   exit 5
 fi
+} # checkcfg
 
 # поиск и удаление дублей
 finddups () {
@@ -75,18 +86,18 @@ gensc () {
 # логинимся (access_token в AUTH, refresh_token в AUTHREF)
 pixlogin () {
   echo -n Logging in...
-  DTH=`date --iso-8601=seconds`
-  DTHASH=`echo -n $DTH$hash_secret | md5sum | cut -d' ' -f 1`
-  AUTHJS=`curl --compressed -k -s -H "Accept-Language: en_US" \
+  DTH=$(date --iso-8601=seconds)
+  DTHASH=$(echo -n $DTH$hash_secret | md5sum | cut -d' ' -f 1)
+  AUTHJS=$(curl --compressed -k -s -H "Accept-Language: en_US" \
                               -H "X-Client-Time: $DTH" \
                               -H "X-Client-Hash: $DTHASH" \
                               -H "app-os: android" \
                               -H "app-os-version: 5.0.156" \
   --data "get_secure_url=true&client_id=${client_id}&client_secret=${client_secret}&grant_type=password&username=${pixid}&password=${pixpass}" \
-  https://oauth.secure.pixiv.net/auth/token -A "$uag"` 
-  AUTH=`echo $AUTHJS | jq -r ".response.access_token"`
-  AUTHREF=`echo $AUTHJS | jq -r ".response.refresh_token"`
-  AUTHDEV=`echo $AUTHJS | jq -r ".response.device_token"`
+  https://oauth.secure.pixiv.net/auth/token -A "$uag")
+  AUTH=$(echo $AUTHJS | jq -r ".response.access_token")
+  AUTHREF=$(echo $AUTHJS | jq -r ".response.refresh_token")
+  AUTHDEV=$(echo $AUTHJS | jq -r ".response.device_token")
   # Проверка логина
   if [ -z $AUTH ]
   then
@@ -104,17 +115,17 @@ refreshlogin () {
   if [ -f ~/.config/pixivtoken.conf ]
   then
     . ~/.config/pixivtoken.conf
-    DTH=`date --iso-8601=seconds`
-    DTHASH=`echo -n $DTH$hash_secret | md5sum | cut -d' ' -f 1`
-    AUTHJS=`curl --compressed -k -s -H "Accept-Language: en_US" \
+    DTH=$(date --iso-8601=seconds)
+    DTHASH=$(echo -n $DTH$hash_secret | md5sum | cut -d' ' -f 1)
+    AUTHJS=$(curl --compressed -k -s -H "Accept-Language: en_US" \
                                     -H "X-Client-Time: $DTH" \
                                     -H "X-Client-Hash: $DTHASH" \
                                     -H "app-os: android" \
                                     -H "app-os-version: 5.0.156" \
     --data "get_secure_url=true&client_id=${client_id}&client_secret=${client_secret}&grant_type=refresh_token&refresh_token=$AUTHREF" \
-    https://oauth.secure.pixiv.net/auth/token -A "$uag"` 
-    AUTH=`echo $AUTHJS | jq -r ".response.access_token"`
-    AUTHREF=`echo $AUTHJS | jq -r ".response.refresh_token"`
+    https://oauth.secure.pixiv.net/auth/token -A "$uag")
+    AUTH=$(echo $AUTHJS | jq -r ".response.access_token")
+    AUTHREF=$(echo $AUTHJS | jq -r ".response.refresh_token")
     # Проверка логина
     if [ -z $AUTH ]
     then
@@ -130,7 +141,7 @@ refreshlogin () {
 
 # функция получения имени пользователя
 getaccname() {
-  savedir=`curl --compressed -# "https://app-api.pixiv.net/v1/user/detail?user_id=$athid" -H "Authorization: Bearer $AUTH"|jq -r ".user.account"`
+  savedir=$(curl --compressed -# "https://app-api.pixiv.net/v1/user/detail?user_id=$athid" -H "Authorization: Bearer $AUTH"|jq -r ".user.account")
   echo Found username: $savedir
 } # getaccname
 
@@ -151,7 +162,7 @@ do
   echo Page $pagenum
   curl --compressed -# "https://public-api.secure.pixiv.net/v1/users/$athid/works.json?image_sizes=large&page=$pagenum&per_page=100" -H "Authorization: Bearer $AUTH" > tmp.json.pixiv.txt
   # Сколько нашли на текущей странице?
-  picnum=`cat tmp.json.pixiv.txt|jq '. | select(.status == "success") | .response[].id' |wc -l`
+  picnum=$(cat tmp.json.pixiv.txt|jq '. | select(.status == "success") | .response[].id' |wc -l)
   if [ $picnum \> 0 ]
   then
     # парсим
@@ -161,7 +172,7 @@ do
     cat tmp.json.pixiv.txt|jq -r '.response[] | select(.is_manga == true) | select(.type != "ugoira")|.id' >> get.pixiv.illist.txt
     # id анимации для дальнейшей обработки в отдельный список
     cat tmp.json.pixiv.txt|jq -r '.response[] | select(.type == "ugoira")|.id' >> get.pixiv.anim.txt
-    pagenum=`expr $pagenum + 1`
+    pagenum=$(expr $pagenum + 1)
   fi
 done;
 
@@ -174,7 +185,7 @@ done;
 procillist () {
   touch get.pixiv.dl.txt
   # Обрабатываем все найденные ID
-  for i in `cat get.pixiv.illist.txt`
+  for i in $(cat get.pixiv.illist.txt)
   do
     echo Processing $i...
     curl --compressed -# "https://public-api.secure.pixiv.net/v1/works/$i.json?image_sizes=large" -H "Authorization: Bearer $AUTH"|jq -r ".response[].metadata.pages[].image_urls.large" >> get.pixiv.dl.txt
@@ -194,7 +205,7 @@ procanim () {
 # Здесь важны только id
 if [ -s get.pixiv.anim.txt ]
 then
-  for i in `cat get.pixiv.anim.txt`
+  for i in $(cat get.pixiv.anim.txt)
   do
     # Получение страницы
     curl --compressed -# "https://public-api.secure.pixiv.net/v1/works/$i.json?image_sizes=large" -H "Authorization: Bearer $AUTH" -A "$uag" > out.ugo
@@ -224,7 +235,8 @@ fi
 trap rmtrash 1 2 3 15
 
 # Обработка всего и вся
-
+checkparam
+checkcfg
 refreshlogin
 # если каталог сохранения не указан, то получаем его с помощь API
 if [ -z $savedir ]
@@ -256,7 +268,7 @@ then
     rmtrash $3
     flock -u 0
     echo [*] FINISHED!
-    echo [*] Ripped ID=$athid to ${dirlet,,}/$savedir
+    echo [*] Ripped ID=$athid to $dirlet/$savedir
   else
     echo [!] ERROR! Каталог сохранения уже обрабатывается!
     exit 4
