@@ -23,37 +23,11 @@ fi
 # Каталог для закачки
 if [ ! -d $savedir ]
 then
-  echo Creating $savedir...
+  echo Creating $savedir
   mkdir "$savedir"
 fi
-echo Entering $savedir...
+echo Entering $savedir
 cd "$savedir"
-
-# Получение логина и пароля
-
-if [ -f ~/.config/boorulogins.conf ]
-then
-  . ~/.config/boorulogins.conf
-else
-  echo Файл с данными для авторизации не найден!
-  echo Создайте файл ~/.config/boorulogins.conf и поместите в него следующие строки:
-  echo sanlogin=ВАШ ЛОГИН
-  echo sanpass=ВАШ ПАРОЛЬ
-  exit 5
-fi
-
-# логинимся
-echo -n Logging in...
-AUTH=$(curl -s "https://capi-v2.sankakucomplex.com/auth/token?lang=english" -d "{\"login\":\"${sanlogin}\",\"password\":\"${sanpass}\"}" -A "$uag" -H "Content-Type: application/json"| jq -r "select(.success=="true") | .access_token")
-
-# Проверка логина
-if [ -z $AUTH ]
-then
-  echo ERROR: Проверьте логин и пароль
-  exit 2
-else
-  echo OK
-fi
 
 # Удаление старого списка
 if [ -e get.sankaku.txt ]
@@ -69,7 +43,7 @@ until [ $picnum -eq 0 ]
 do
   # Получение списка
   echo Page $pagenum
-  curl -# --compressed -A "$uag" "https://capi-v2.sankakucomplex.com/posts?tags=$tags&page=$pagenum&limit=100" -H "Authorization: Bearer $AUTH" | jq -r ".[].file_url" > tmp.sankaku.txt
+  curl -# --compressed -A "$uag" "https://capi-v2.sankakucomplex.com/posts?tags=$tags&page=$pagenum&limit=100" | pcregrep --buffer-size=1M -o -e 'file_url\":\"[^\"]+' | sed -e 's#"##g' -e 's#file_url:##g' > tmp.sankaku.txt
   picnum=$(cat tmp.sankaku.txt|wc -l)
   if [ $picnum \> 0 ]
   then
