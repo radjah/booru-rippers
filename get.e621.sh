@@ -15,7 +15,7 @@ else
     savedir=$1
   else
     echo Использование:
-    echo `basename $0` теги \[каталог\]
+    echo $(basename $0) теги \[каталог\]
     exit 1
   fi
 fi
@@ -37,7 +37,7 @@ echo $postcount posts
 if [ $postcount -eq 0 ]
 then
   echo По сочетанию "$tags" ничего не найдено.
-  rm -f tmp.e621.txt
+  rm -f tmp.e621.txt 2> /dev/null
   exit 3
 else
   echo По сочетанию "$tags" найдено постов: $postcount
@@ -58,17 +58,17 @@ do
   # Получение списка
   echo Page $pagenum
   curl -# "https://e621.net/post/index.xml?tags=$tags&limit=100&page=$pagenum" -A "$uag"|pcregrep -o -e '<file_url>.*<\/file_url>'|sed -e 's#<file_url>##g' -e 's#</file_url>##g' > tmp.e621.txt
-  picnum=`cat tmp.e621.txt|wc -l`
+  picnum=$(cat tmp.e621.txt|wc -l)
   if [ $picnum \> 0 ]
   then
     cat tmp.e621.txt >> get.e621.txt
-    pagenum=`expr $pagenum + 1`
+    pagenum=$(expr $pagenum + 1)
   fi
 done;
 
 wget --no-check-certificate -nc -i get.e621.txt
 
-rm -f tmp.e621.txt
+rm -f tmp.e621.txt 2> /dev/null
 
 echo Finished!
 echo $tags \=\> $savedir

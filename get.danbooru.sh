@@ -30,7 +30,6 @@ echo Entering $savedir...
 cd "$savedir"
 
 # Получение логина и пароля
-
 if [ -f ~/.config/boorulogins.conf ]
 then
   . ~/.config/boorulogins.conf
@@ -81,7 +80,7 @@ fi
 wget -U "$uag" -nc -i get.danbooru.txt
 
 # уборка
-rm -f tmp.danbooru.txt
+rm -f tmp.danbooru.txt 2> /dev/null
 
 echo Finished!
 echo $tags \=\> $savedir

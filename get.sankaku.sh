@@ -15,7 +15,7 @@ else
     savedir=$1
   else
     echo Использование:
-    echo `basename $0` теги \[каталог\]
+    echo $(basename $0) теги \[каталог\]
     exit 1
   fi
 fi
@@ -44,16 +44,16 @@ do
   # Получение списка
   echo Page $pagenum
   curl -# --compressed -A "$uag" "https://capi-v2.sankakucomplex.com/posts?tags=$tags&page=$pagenum&limit=100" | pcregrep --buffer-size=1M -o -e 'file_url\":\"[^\"]+' | sed -e 's#"##g' -e 's#file_url:##g' > tmp.sankaku.txt
-  picnum=`cat tmp.sankaku.txt|wc -l`
+  picnum=$(cat tmp.sankaku.txt|wc -l)
   if [ $picnum \> 0 ]
   then
     cat tmp.sankaku.txt >> get.sankaku.txt
-    pagenum=`expr $pagenum + 1`
+    pagenum=$(expr $pagenum + 1)
   fi
 done;
 
 # Проверка количетсва
-postcount=`cat get.sankaku.txt|wc -l`
+postcount=$(cat get.sankaku.txt|wc -l)
 
 if [ $postcount -eq 0 ]
 then
@@ -67,7 +67,7 @@ fi
 aria2c --allow-overwrite=true --auto-file-renaming=false --conditional-get=true --remote-time -x10 -s10 -i get.sankaku.txt
 
 # убираем за собой
-rm -f tmp.sankaku.txt
+rm -f tmp.sankaku.txt 2> /dev/null
 
 echo Finished!
 echo $tags \=\> $savedir

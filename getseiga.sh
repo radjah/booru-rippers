@@ -26,21 +26,21 @@ then
   then
     echo Не указан ID художника и каталог!
   fi
-  echo Использование: `basename $0` id_художника каталог
+  echo Использование: $(basename $0) id_художника каталог
   exit 1
 fi
 
 
 # Папка для сохранения вида первая_буква_имени/имя
 
-dirlet=`echo $2|cut -c-1`
-if [ ! -d seiga/${dirlet,,}/$2 ]
+dirlet=$(echo $2|cut -c-1)
+if [ ! -d seiga/$dirlet/$2 ]
 then
-echo Creating seiga/${dirlet,,}/$2
-mkdir -p "seiga/${dirlet,,}/$2"
+echo Creating seiga/$dirlet/$2
+mkdir -p "seiga/$dirlet/$2"
 fi
-echo Entering seiga/${dirlet,,}/$2
-cd seiga/${dirlet,,}/$2
+echo Entering seiga/$dirlet/$2
+cd seiga/$dirlet/$2
 
 
 
@@ -63,11 +63,11 @@ seigalogin () {
   echo "seiga.nicovideo.jp	FALSE	/	FALSE	4564805162	skip_fetish_warning	1" >> niko.txt
 
 # Проверка логина
-  checklog=`cat niko.txt |grep user_session|wc -l`
+  checklog=$(cat niko.txt |grep user_session|wc -l)
   if [ $checklog -eq 0 ]
   then
     echo ERROR: Проверьте логин и пароль
-    rm pixiv.txt
+    rm niko.txt
     exit 2
   else
     echo OK
@@ -87,20 +87,20 @@ until [ $picnum -eq 0 ]
 do
   echo Page $pagenum
   curl -# "http://seiga.nicovideo.jp/user/illust/$athid?page=$pagenum&target=illust_all" -b niko.txt -A "$uag" |pcregrep -o -e 'lohas\.nicoseiga\.jp\/\/thumb\/[^q]+'|pcregrep -o -e '\d+'|awk '{ print "http://seiga.nicovideo.jp/image/source/"$0 }' > out.txt
-  picnum=`cat out.txt|wc -l`
+  picnum=$(cat out.txt|wc -l)
   # Если что-то напарсили
   if [ $picnum \> 0 ]
   then
     # Запоминаем
     cat out.txt >> get.seiga.all.txt
-    pagenum=`expr $pagenum + 1`
+    pagenum=$(expr $pagenum + 1)
   fi
 done;
 
 # Проверяем уже скаченное
 
 ls *.jp*g *.png *.gif|sed 's/\..*//g'|sort > pres.txt
-basename -a `cat get.seiga.all.txt`|sort > all.txt
+basename -a $(cat get.seiga.all.txt)|sort > all.txt
 comm -2 -3 all.txt pres.txt  | awk '{ print "http://seiga.nicovideo.jp/image/source/" $0 }' > get.seiga.all.txt
 
 # Качаем
@@ -113,7 +113,7 @@ then
   then
     rm loclist.txt
   fi
-  for i in `ls get.seiga.*.all.txt`
+  for i in $(ls get.seiga.*.all.txt)
   do
     seigalogin
     cat $i|xargs -l1 -t curl -# -b niko.txt -D - | grep Location > loclist.txt
@@ -130,5 +130,5 @@ fi
 # Убираем мусор
 if [ ! $3 ]
 then
-  rm -rf out.txt get.seiga*all.txt niko.txt *list.txt pres.txt all.txt
+  rm -rf out.txt get.seiga*all.txt niko.txt *list.txt pres.txt all.txt 2> /dev/null
 fi

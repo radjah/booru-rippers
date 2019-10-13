@@ -15,7 +15,7 @@ else
     savedir=$1
   else
     echo Использование:
-    echo `basename $0` теги \[каталог\]
+    echo $(basename $0) теги \[каталог\]
     exit 1
   fi
 fi
@@ -30,7 +30,7 @@ echo Entering $savedir
 cd "$savedir"
 
 # Количество постов
-postcount=`curl -# "http://konachan.com/post/index.xml?tags=$tags&limit=1" -A "$uag"|pcregrep -o 'posts\ count=\"[^"]+'|sed -e 's/posts\ count=//' -e 's/\"//'`
+postcount=$(curl -# "https://konachan.com/post/index.xml?tags=$tags&limit=1" -A "$uag"|pcregrep -o 'posts\ count=\"[^"]+'|sed -e 's/posts\ count=//' -e 's/\"//')
 
 # Проверка количетсва
 if [ $postcount -eq 0 ]
@@ -52,7 +52,7 @@ pcount=`expr $postcount / 1000 + 1`
 for ((i=1; i<=$pcount; i++))
 do
   echo Page $i
-  curl "http://konachan.com/post/index.xml?tags=$1&limit=1000&page=$i" -A "$uag" |pcregrep -o -e 'file_url=[^ ]+'|sed -e 's/file_url=//g' -e 's/\"//g'  >>get2.konachan.txt
+  curl "https://konachan.com/post/index.xml?tags=$1&limit=1000&page=$i" -A "$uag" |pcregrep -o -e 'file_url=[^ ]+'|sed -e 's/file_url=//g' -e 's/\"//g'  >>get2.konachan.txt
 done;
 
 # Дробление списка
@@ -63,7 +63,7 @@ paste -d "." get2.konachan.md5.txt get2.konachan.ext.txt > get2.konachan.txt
 
 wget -nc -i get2.konachan.txt
 
-rm -f get2.konachan.*.txt
+rm -f get2.konachan.*.txt 2> /dev/null
 
 echo Finished!
 echo $tags \=\> $savedir

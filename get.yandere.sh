@@ -15,7 +15,7 @@ else
     savedir=$1
   else
     echo Использование:
-    echo `basename $0` теги \[каталог\]
+    echo $(basename $0) теги \[каталог\]
     exit 1
   fi
 fi
@@ -29,7 +29,7 @@ fi
 echo Entering $savedir
 cd "$savedir"
 
-postcount=`curl -k -# "https://yande.re/post/index.xml?tags=$1&limit=1" -A "$uag"|pcregrep -o 'posts\ count=\"[^"]+'|sed -e 's/posts\ count=//' -e 's/\"//'`
+postcount=$(curl -k -# "https://yande.re/post/index.xml?tags=$1&limit=1" -A "$uag"|pcregrep -o 'posts\ count=\"[^"]+'|sed -e 's/posts\ count=//' -e 's/\"//')
 
 # Проверка количетсва
 if [ $postcount -eq 0 ]
@@ -46,7 +46,7 @@ then
   rm -f get2.yandere.txt
 fi
 
-let "pcount=postcount/1000+1"
+pcount=$(expr $postcount / 1000 + 1)
 
 for ((i=1; i<=$pcount; i++))
 do
@@ -62,7 +62,7 @@ paste -d "." get2.yandere.md5.txt get2.yandere.ext.txt > get2.yandere.txt
 
 wget --no-check-certificate -nc -i get2.yandere.txt
 
-rm -f get2.yandere.*.txt
+rm -f get2.yandere.*.txt 2> /dev/null
 
 echo Finished!
 echo $tags \=\> $savedir

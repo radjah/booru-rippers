@@ -15,7 +15,7 @@ else
     savedir=$1
   else
     echo Использование:
-    echo `basename $0` теги \[каталог\]
+    echo $(basename $0) теги \[каталог\]
     exit 1
   fi
 fi
@@ -30,7 +30,7 @@ echo Entering $savedir
 cd "$savedir"
 
 # Количество постов
-postcount=`curl --compressed -# "https://rule34.xxx/index.php?page=dapi&s=post&q=index&tags=$tags&limit=1" -A "$uag"|pcregrep -o 'posts\ count=\"[^"]+'|sed -e 's/posts\ count=//' -e 's/\"//'`
+postcount=$(curl --compressed -# "https://rule34.xxx/index.php?page=dapi&s=post&q=index&tags=$tags&limit=1" -A "$uag"|pcregrep -o 'posts\ count=\"[^"]+'|sed -e 's/posts\ count=//' -e 's/\"//')
 
 # Проверка количетсва
 if [ $postcount -eq 0 ]
