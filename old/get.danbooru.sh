@@ -1,4 +1,4 @@
-#!/bin/bash
+﻿#!/bin/bash
 
 # Юзергаент
 uag="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:56.0) Gecko/20100101 Firefox/56.0"
@@ -15,7 +15,7 @@ else
     savedir=$1
   else
     echo Использование:
-    echo $(basename $0) теги \[каталог\]
+    echo `basename $0` теги \[каталог\]
     exit 1
   fi
 fi
@@ -23,10 +23,10 @@ fi
 # Каталог для закачки
 if [ ! -d $savedir ]
 then
-  echo Creating $savedir...
+  echo Creating $savedir
   mkdir "$savedir"
 fi
-echo Entering $savedir...
+echo Entering $savedir
 cd "$savedir"
 
 # Получение логина и пароля
@@ -49,7 +49,7 @@ then
   rm -f get.danbooru.txt
 fi
 
-# Загрузка до тех пор, пока в выдаче не будет 0 ссылок
+# Загрузка до тех пор, пока в выдаче будет 0 ссылок
 pagenum=1
 picnum=1
 
@@ -57,17 +57,22 @@ until [ $picnum -eq 0 ]
 do
   # Получение списка
   echo Page $pagenum
-  curl -# -k "https://danbooru.donmai.us/posts.json?tags=$tags&limit=200&page=$pagenum" -u $danlogin:$danapikey -A "$uag"|jq -r '.[].file_url|values' > tmp.danbooru.txt
-  picnum=$(cat tmp.danbooru.txt|wc -l)
+  curl -# -k "https://danbooru.donmai.us/posts.json?tags=$tags&limit=200&page=$pagenum" -u $danlogin:$danapikey -A "$uag"|pcregrep --buffer-size 1M -o -e '\"file_url\":\"[^\"]+'|sed \
+  -e 's#"file_url":"data#https://danbooru.donmai.us/data#g'      \
+  -e 's#"file_url":"/data#https://danbooru.donmai.us/data#g'     \
+  -e 's#"file_url":"/cached#https://danbooru.donmai.us/cached#g' \
+  -e 's#"file_url":"##g'                                         \
+  -e 's/--.*--//g' -e 's/__.*__//g' > tmp.danbooru.txt
+  picnum=`cat tmp.danbooru.txt|wc -l`
   if [ $picnum \> 0 ]
   then
     cat tmp.danbooru.txt >> get.danbooru.txt
-    pagenum=$(expr $pagenum + 1)
+    pagenum=`expr $pagenum + 1`
   fi
 done;
 
 # Проверка количетсва
-postcount=$(cat get.danbooru.txt|wc -l)
+postcount=`cat get.danbooru.txt|wc -l`
 
 if [ $postcount -eq 0 ]
 then
