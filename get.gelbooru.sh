@@ -23,11 +23,11 @@ fi
 # Каталог для закачки
 if [ ! -d $savedir ]
 then
-  echo Creating $savedir
+  echo Creating $savedir...
   mkdir "$savedir"
 fi
 
-echo Entering $savedir
+echo Entering $savedir...
 cd "$savedir"
 
 # Количество постов

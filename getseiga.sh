@@ -36,10 +36,10 @@ fi
 dirlet=$(echo $2|cut -c-1)
 if [ ! -d seiga/$dirlet/$2 ]
 then
-echo Creating seiga/$dirlet/$2
+echo Creating seiga/$dirlet/$2...
 mkdir -p "seiga/$dirlet/$2"
 fi
-echo Entering seiga/$dirlet/$2
+echo Entering seiga/$dirlet/$2...
 cd seiga/$dirlet/$2
 
 
@@ -56,6 +56,7 @@ seigalogin () {
   then
     rm niko.txt
   fi
+  echo -n Logging in...
   curl -k -s -c niko.txt -F"mail=${seigaid}" -F"password=${seigapass}" "https://secure.nicovideo.jp/secure/login?site=seiga"
 
 # Чтобы не было запроса подтверждения возраста

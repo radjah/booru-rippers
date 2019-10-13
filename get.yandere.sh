@@ -23,10 +23,10 @@ fi
 # Каталог для закачки
 if [ ! -d $savedir ]
 then
-  echo Creating $savedir
+  echo Creating $savedir...
   mkdir "$savedir"
 fi
-echo Entering $savedir
+echo Entering $savedir...
 cd "$savedir"
 
 postcount=$(curl -k -# "https://yande.re/post/index.xml?tags=$1&limit=1" -A "$uag"|pcregrep -o 'posts\ count=\"[^"]+'|sed -e 's/posts\ count=//' -e 's/\"//')
