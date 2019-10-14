@@ -97,10 +97,15 @@ procanim () {
   # Получение страницы
   curl --compressed -# "https://public-api.secure.pixiv.net/v1/works/$ugoid.json?image_sizes=large" -H "Authorization: Bearer $AUTH" -A "$uag" > out.ugo
   # Проверка типа
-  posttype=$(cat out.ugo|jq -r '.response[].type')
+  posttype=$(cat out.ugo| jq 'select(.status == "success" )' | jq -r '.response[].type')
   if [[ $posttype != "ugoira" ]]
   then
-    echo Неправильный тип поста по ID $ugoid\: $posttype
+    if [ -z $posttype ]
+    then
+      echo Пост с ID $ugoid не найден!
+    else
+      echo Неправильный тип поста по ID $ugoid\: $posttype
+    fi
     cleantmp
     exit 3
   fi
@@ -125,7 +130,7 @@ convertugo () {
   then
     echo Extracting...
     cd files
-    unzip ../${ugoid}_ugoira1920x1080.zip
+    unzip -q ../${ugoid}_ugoira1920x1080.zip
     arrfile=($(ls *))
   else
     echo Архив ${ugoid}_ugoira1920x1080.zip не найден!
@@ -142,7 +147,13 @@ convertugo () {
       echo Converting...
       convcmd="$convcmd mpeg:$curdir/${ugoid}.mp4"
       $convcmd
-      echo Done!
+      convret=$?
+      if [ $convret -eq 0 ]
+      then
+        echo Сохранено в $curdir/${ugoid}.mp4
+      else
+        echo Ошибка записи в $curdir/${ugoid}.mp4
+      fi
   else
     echo arrfile \!= arrdelay Что-то пошло не так.
   fi
