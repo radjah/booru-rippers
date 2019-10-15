@@ -33,7 +33,7 @@ fi
 
 # Папка для сохранения вида первая_буква_имени/имя
 
-dirlet=$(echo $2|cut -c-1)
+dirlet=$(echo -n $2 | tr "[:upper:]" "[:lower:]" | cut -c-1)
 if [ ! -d seiga/$dirlet/$2 ]
 then
 echo Creating seiga/$dirlet/$2...

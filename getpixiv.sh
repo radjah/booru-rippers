@@ -24,7 +24,7 @@ dldr='aria2c --always-resume=false --max-resume-failure-tries=0 --remote-time'
 
 # Каталог для сохранения
 createdir () {
-  dirlet=$(echo -n $savedir|cut -c-1)
+  dirlet=$(echo -n $savedir| tr "[:upper:]" "[:lower:]" | cut -c-1)
   if [ ! -d $dirlet/$savedir ]
   then
     echo Creating $dirlet/$savedir...
