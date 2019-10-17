@@ -7,13 +7,19 @@ client_secret="lsACyCD94FhDUtGTXi3QzcFE2uU1hqtDaKeqrdwj"
 hash_secret="28c1fdd170a5204386cb1313c7077b34f83e4aaf4aa829ce78c231e05b0bae2c"
 
 ugoid=$1
+outformat=$2
 
 # Проверка параметров
 checkparam () {
 if [ "$ugoid" = "" ]
 then
   echo Не указан ID анимации!
-  echo Использование: $(basename $0) id_анимации
+  echo Использование: $(basename $0) id_анимации формат
+  echo Формат может быть:
+  echo gif  - gif-анимация
+  echo png  - png-анимация
+  echo coub - mp4-файл, понятный большинству плееров
+  echo Если не указан, то mp4 без специальной обработки.
   exit 1
 fi
 } # checkparam
@@ -144,15 +150,39 @@ convertugo () {
     do
       convcmd="$convcmd -delay ${arrdelay[i]}x1000 ${arrfile[i]} "
     done;
-      echo Converting...
-      convcmd="$convcmd mpeg:$curdir/${ugoid}.mp4"
-      $convcmd
-      convret=$?
+      echo -n Converting\ 
+      case $outformat in
+        gif)
+          echo to gif...
+          outfile=$curdir/${ugoid}.gif
+          $convcmd -layers Optimize gif:$outfile
+          convret=$?
+          ;;
+        png)
+          echo to png...
+          outfile=$curdir/${ugoid}.mng
+          $convcmd -define png:color-type=2 -define png:bit-depth=16 -type optimize mng:$outfile
+          convret=$?
+          ;;
+        coub)
+          echo to coub-mp4...
+          outfile=$curdir/${ugoid}.coub.mp4
+          $convcmd mpeg:$tmpdir/${ugoid}.mp4
+          ffmpeg -hide_banner -v warning -stats -y -r 30 -vf "crop=trunc(iw/2)*2:trunc(ih/2)*2:0:0" -i $tmpdir/${ugoid}.mp4 $outfile
+          convret=$?
+          ;;
+        *)
+          echo to mp4...
+          outfile=$curdir/${ugoid}.mp4
+          $convcmd mpeg:$outfile
+          convret=$?
+          ;;
+      esac
       if [ $convret -eq 0 ]
       then
-        echo Сохранено в $curdir/${ugoid}.mp4
+        echo Сохранено в $outfile
       else
-        echo Ошибка записи в $curdir/${ugoid}.mp4
+        echo Ошибка записи в $outfile
       fi
   else
     echo arrfile \!= arrdelay Что-то пошло не так.
