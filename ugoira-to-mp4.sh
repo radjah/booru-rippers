@@ -17,7 +17,6 @@ then
   echo Использование: $(basename $0) id_анимации формат
   echo Формат может быть:
   echo gif  - gif-анимация
-  echo png  - png-анимация
   echo coub - mp4-файл, понятный большинству плееров
   echo Если не указан, то mp4 без специальной обработки.
   exit 1
@@ -158,12 +157,6 @@ convertugo () {
           $convcmd -layers Optimize gif:$outfile
           convret=$?
           ;;
-        png)
-          echo to png...
-          outfile=$curdir/${ugoid}.mng
-          $convcmd -define png:color-type=2 -define png:bit-depth=16 -type optimize mng:$outfile
-          convret=$?
-          ;;
         coub)
           echo to coub-mp4...
           outfile=$curdir/${ugoid}.coub.mp4
@@ -173,8 +166,18 @@ convertugo () {
           ;;
         *)
           echo to mp4...
-          outfile=$curdir/${ugoid}.mp4
-          $convcmd mpeg:$outfile
+          outfile=$curdir/${ugoid}.mkv
+          # генерация файла таймкодов
+          echo "# timecode format v2" > ../timecodes.tc
+          delay_sum=0
+          for i in ${!arrdelay[@]}
+          do
+            delay_sum=$(expr $delay_sum + ${arrdelay[i]})
+            echo $delay_sum >> ../timecodes.tc
+          done
+#         ffmpeg -hide_banner -v warning -stats -y -framerate 6 -i '%06d.jpg' -c:v libvpx -crf 4 -b:v 5000k ../${ugoid}.tmp.webm
+          ffmpeg -hide_banner -v warning -stats -y -framerate 6 -i '%06d.jpg' ../${ugoid}.tmp.mkv
+          mkvmerge -o $outfile --timecodes 0:../timecodes.tc ../${ugoid}.tmp.mkv
           convret=$?
           ;;
       esac
