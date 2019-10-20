@@ -136,12 +136,12 @@ procanim () {
 createtc () {
   echo "# timestamp format v2" > ../timecodes.tc
   delay_sum=0
+  echo $delay_sum >> ../timecodes.tc
   for i in ${!arrdelay[@]}
   do
-    echo $delay_sum >> ../timecodes.tc
     delay_sum=$(expr $delay_sum + ${arrdelay[i]})
+    echo $delay_sum >> ../timecodes.tc
   done
-  echo $delay_sum >> ../timecodes.tc
   echo $delay_sum >> ../timecodes.tc
 } # createtc
 
@@ -207,8 +207,7 @@ convertugo () {
           outfile=$curdir/${ugoid}.mp4
           createtc
           ffmpeg -hide_banner -v warning -stats -y -framerate 15 -i '%06d.jpg' ../${ugoid}.tmp.mp4
-          ffmpeg -hide_banner -v warning -y -r 1 -i ../${ugoid}.tmp.mp4 -c:v copy ../${ugoid}.tmp.mkv
-          mkvmerge -o ../${ugoid}.mkv -q -A --timecodes 0:../timecodes.tc ../${ugoid}.tmp.mkv
+          mkvmerge -o ../${ugoid}.mkv -q -A --timecodes 0:../timecodes.tc ../${ugoid}.tmp.mp4
           ffmpeg -hide_banner -v warning -y -vsync 2 -c:v copy $outfile -i ../${ugoid}.mkv
           convret=$?
           ;;
