@@ -9,6 +9,15 @@ hash_secret="28c1fdd170a5204386cb1313c7077b34f83e4aaf4aa829ce78c231e05b0bae2c"
 athid=$1
 savedir=$2
 
+# проверка наличия команд
+checkapp () {
+if ! which $1 2>&1 > /dev/null
+then
+  echo $1 not found!
+  exit 6
+fi
+} # checkapp
+
 # Проверка параметров
 checkparam () {
 if [ "$athid" = "" ]
@@ -236,6 +245,9 @@ trap rmtrash 1 2 3 15
 
 # Обработка всего и вся
 checkparam
+checkapp curl
+checkapp wget
+checkapp jq
 checkcfg
 refreshlogin
 # если каталог сохранения не указан, то получаем его с помощь API
