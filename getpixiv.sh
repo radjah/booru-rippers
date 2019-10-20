@@ -202,7 +202,7 @@ procillist () {
   # Скачивание
   if [ -s get.pixiv.dl.txt ]
   then
-    $dldr -i get.pixiv.dl.txt --referer="http://www.pixiv.net/"
+    $dldr -i get.pixiv.dl.txt --referer="https://www.pixiv.net/"
   fi
 } # procillist
 
@@ -220,7 +220,7 @@ then
     curl --compressed -# "https://public-api.secure.pixiv.net/v1/works/$i.json?image_sizes=large" -H "Authorization: Bearer $AUTH" -A "$uag" > out.ugo
     # Получение ссылки
     cat out.ugo|jq -r '.response[].metadata.zip_urls[]' |sed 's#_ugoira[^.]*#_ugoira1920x1080#g' >> get.pixiv.anim.dl.txt
-    # Сохранение информации для анимацией без имен файлов, но в нужном порядке
+    # Сохранение информации о времени кадров
     cat out.ugo|jq -Mc '{delay_msec: .response[].metadata.frames[].delay_msec}' > ${i}_ugoira1920x1080.txt
   done;
 fi
@@ -228,7 +228,7 @@ fi
 # Скачивание
 if [ -s get.pixiv.anim.dl.txt ] 
 then
-  wget -nc -i get.pixiv.anim.dl.txt --referer="http://www.pixiv.net/"
+  wget -nc -i get.pixiv.anim.dl.txt --referer="https://www.pixiv.net/"
 fi
 } # procanim
 

@@ -74,7 +74,7 @@ pixlogin () {
   fi
 } # pixlogin
 
-# Обнвление refresh_token
+# Обновление access_token с помощью refresh_token
 refreshlogin () {
   echo -n Refresh login...
   if [ -f ~/.config/pixivtoken.conf ]
@@ -109,7 +109,6 @@ refreshlogin () {
 ######################
 
 procanim () {
-# Здесь важны только id
   # Получение страницы
   curl --compressed -# "https://public-api.secure.pixiv.net/v1/works/$ugoid.json?image_sizes=large" -H "Authorization: Bearer $AUTH" -A "$uag" > out.ugo
   # Проверка типа
@@ -128,9 +127,9 @@ procanim () {
   # Получение ссылки
   echo Downloading...
   cat out.ugo|jq -r '.response[].metadata.zip_urls[]' |sed 's#_ugoira[^.]*#_ugoira1920x1080#g' | wget -nc -i - -O ${ugoid}_ugoira1920x1080.zip --referer="https://www.pixiv.net/"
-  # Сохранение информации для анимацией без имен файлов, но в нужном порядке
+  # Сохранение информации о времени кадров
   cat out.ugo|jq -Mc '{delay_msec: .response[].metadata.frames[].delay_msec}' > ${ugoid}_ugoira1920x1080.txt
-} #procanim
+} # procanim
 
 # генерация файла таймкодов
 createtc () {
@@ -221,7 +220,7 @@ convertugo () {
   else
     echo arrfile \!= arrdelay Что-то пошло не так.
   fi
-}
+} # convertugo
 
 # удаление мусора
 cleantmp () {
