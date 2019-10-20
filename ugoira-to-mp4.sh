@@ -9,16 +9,27 @@ hash_secret="28c1fdd170a5204386cb1313c7077b34f83e4aaf4aa829ce78c231e05b0bae2c"
 ugoid=$1
 outformat=$2
 
+# проверка наличия команд
+checkapp () {
+if ! which $1 2>&1 > /dev/null
+then
+  echo $1 not found!
+  exit 6
+fi
+} # checkapp
+
 # Проверка параметров
 checkparam () {
 if [ "$ugoid" = "" ]
 then
-  echo Не указан ID анимации!
-  echo Использование: $(basename $0) id_анимации формат
-  echo Формат может быть:
-  echo gif  - gif-анимация
-  echo coub - mp4-файл, понятный большинству плееров
-  echo Если не указан, то mp4 без специальной обработки.
+  echo "Не указан ID анимации!"
+  echo "Использование: $(basename $0) id_анимации формат"
+  echo "Формат может быть:"
+  echo "gif  - gif-анимация"
+  echo "coub - mp4-файл с видео в формате x264."
+  echo "       Понятен большинству плееров и редактору на сайте coub.com."
+  echo "mkv  - mkv-файл с видео в формате x264 без специальной обработки."
+  echo "Если не указан, то mp4 без специальной обработки."
   exit 1
 fi
 } # checkparam
@@ -112,14 +123,27 @@ procanim () {
       echo Неправильный тип поста по ID $ugoid\: $posttype
     fi
     cleantmp
-    exit 3
+    exit 6
   fi
   # Получение ссылки
   echo Downloading...
-  cat out.ugo|jq -r '.response[].metadata.zip_urls[]' |sed 's#_ugoira[^.]*#_ugoira1920x1080#g' | wget -nc -i - -O ${ugoid}_ugoira1920x1080.zip --referer="http://www.pixiv.net/"
+  cat out.ugo|jq -r '.response[].metadata.zip_urls[]' |sed 's#_ugoira[^.]*#_ugoira1920x1080#g' | wget -nc -i - -O ${ugoid}_ugoira1920x1080.zip --referer="https://www.pixiv.net/"
   # Сохранение информации для анимацией без имен файлов, но в нужном порядке
   cat out.ugo|jq -Mc '{delay_msec: .response[].metadata.frames[].delay_msec}' > ${ugoid}_ugoira1920x1080.txt
 } #procanim
+
+# генерация файла таймкодов
+createtc () {
+  echo "# timestamp format v2" > ../timecodes.tc
+  delay_sum=0
+  for i in ${!arrdelay[@]}
+  do
+    echo $delay_sum >> ../timecodes.tc
+    delay_sum=$(expr $delay_sum + ${arrdelay[i]})
+  done
+  echo $delay_sum >> ../timecodes.tc
+  echo $delay_sum >> ../timecodes.tc
+} # createtc
 
 # сборка анимации
 convertugo () {
@@ -129,7 +153,7 @@ convertugo () {
   else
     echo Файл с описанием кадров ${ugoid}_ugoira1920x1080.txt не найден!
     cleantmp
-    exit 3
+    exit 6
   fi
   if [ -f ${ugoid}_ugoira1920x1080.zip ]
   then
@@ -140,44 +164,52 @@ convertugo () {
   else
     echo Архив ${ugoid}_ugoira1920x1080.zip не найден!
     cleantmp
-    exit 3
+    exit 6
   fi
   if [[ ${#arrfile[@]} -eq ${#arrdelay[@]} ]]
   then
-    convcmd="convert -loop 0 "
-    for i in ${!arrfile[@]}
-    do
-      convcmd="$convcmd -delay ${arrdelay[i]}x1000 ${arrfile[i]} "
-    done;
       echo -n Converting\ 
       case $outformat in
         gif)
           echo to gif...
           outfile=$curdir/${ugoid}.gif
+          # генерация команды
+          convcmd="convert -loop 0 "
+          for i in ${!arrfile[@]}
+          do
+            convcmd="$convcmd -delay ${arrdelay[i]}x1000 ${arrfile[i]} "
+          done;
           $convcmd -layers Optimize gif:$outfile
           convret=$?
           ;;
         coub)
           echo to coub-mp4...
           outfile=$curdir/${ugoid}.coub.mp4
-          $convcmd mpeg:$tmpdir/${ugoid}.mp4
-          ffmpeg -hide_banner -v warning -stats -y -r 30 -vf "crop=trunc(iw/2)*2:trunc(ih/2)*2:0:0" -i $tmpdir/${ugoid}.mp4 $outfile
+          createtc
+          # преобразование кадров в видео 15 fps
+          ffmpeg -hide_banner -v warning -stats -y -framerate 15 -i '%06d.jpg' -vf "crop=trunc(iw/2)*2:trunc(ih/2)*2:0:0" ../${ugoid}.tmp.mkv
+          # запись таймкодов в файл
+          mkvmerge -o ../${ugoid}.mkv -q -A --timecodes 0:../timecodes.tc ../${ugoid}.tmp.mkv
+          # преобразование mkv в vfr mp4
+          ffmpeg -hide_banner -v warning -y -vsync 2 -c:v copy $outfile -i ../${ugoid}.mkv
+          convret=$?
+          ;;
+        mkv)
+          echo to mkv...
+          outfile=$curdir/${ugoid}.mkv
+          createtc
+          ffmpeg -hide_banner -v warning -stats -y -framerate 15 -i '%06d.jpg' ../${ugoid}.tmp.mkv
+          mkvmerge -o $outfile -q -A --timecodes 0:../timecodes.tc ../${ugoid}.tmp.mkv
           convret=$?
           ;;
         *)
           echo to mp4...
-          outfile=$curdir/${ugoid}.mkv
-          # генерация файла таймкодов
-          echo "# timecode format v2" > ../timecodes.tc
-          delay_sum=0
-          for i in ${!arrdelay[@]}
-          do
-            delay_sum=$(expr $delay_sum + ${arrdelay[i]})
-            echo $delay_sum >> ../timecodes.tc
-          done
-#         ffmpeg -hide_banner -v warning -stats -y -framerate 6 -i '%06d.jpg' -c:v libvpx -crf 4 -b:v 5000k ../${ugoid}.tmp.webm
-          ffmpeg -hide_banner -v warning -stats -y -framerate 6 -i '%06d.jpg' ../${ugoid}.tmp.mkv
-          mkvmerge -o $outfile --timecodes 0:../timecodes.tc ../${ugoid}.tmp.mkv
+          outfile=$curdir/${ugoid}.mp4
+          createtc
+          ffmpeg -hide_banner -v warning -stats -y -framerate 15 -i '%06d.jpg' ../${ugoid}.tmp.mp4
+          ffmpeg -hide_banner -v warning -y -r 1 -i ../${ugoid}.tmp.mp4 -c:v copy ../${ugoid}.tmp.mkv
+          mkvmerge -o ../${ugoid}.mkv -q -A --timecodes 0:../timecodes.tc ../${ugoid}.tmp.mkv
+          ffmpeg -hide_banner -v warning -y -vsync 2 -c:v copy $outfile -i ../${ugoid}.mkv
           convret=$?
           ;;
       esac
@@ -200,6 +232,20 @@ cleantmp () {
 
 # Обработка
 
+checkapp curl
+checkapp wget
+checkapp jq
+case $outformat in
+  gif)
+    checkapp convert
+    ;;
+  *)
+    checkapp ffmpeg
+    checkapp mkvmerge
+    ;;
+esac
+
+
 checkparam
 checkcfg
 refreshlogin
@@ -213,7 +259,7 @@ then
   mkdir files
 else
   echo Ошибка создания временного каталога!
-  exit 3
+  exit 6
 fi
 
 procanim
