@@ -57,7 +57,7 @@ createdir () {
 # ярлык на страницу автора
 gensc () {
   echo \[InternetShortcut\] > "$savedir.url"
-  echo URL=http\:\/\/seiga\.nicovideo\.jp\/user\/illust\/$athid\?target=illust_all >> "$savedir.url"
+  echo URL=https\:\/\/seiga\.nicovideo\.jp\/user\/illust\/$athid\?target=illust_all >> "$savedir.url"
 } # gensc
 
 # Логинимся (куки в niko.txt)
@@ -95,9 +95,9 @@ proclist () {
   until [ $picnum -eq 0 ]
   do
     echo Page $pagenum
-    curl -# --compressed "http://seiga.nicovideo.jp/user/illust/$athid?page=$pagenum&target=illust_all" \
+    curl -# --compressed "https://seiga.nicovideo.jp/user/illust/$athid?page=$pagenum&target=illust_all" \
          -b niko.txt -A "$uag" |pcregrep -o -e 'lohas\.nicoseiga\.jp\/\/thumb\/[^q]+'|pcregrep -o \
-         -e '\d+'|awk '{ print "http://seiga.nicovideo.jp/image/source/"$0 }' > out.txt
+         -e '\d+'|awk '{ print "https://seiga.nicovideo.jp/image/source/"$0 }' > out.txt
     picnum=$(cat out.txt|wc -l)
     # Если что-то напарсили
     if [ $picnum \> 0 ]
@@ -111,7 +111,7 @@ proclist () {
   # Проверяем уже скаченное
   ls *.jp*g *.png *.gif 2> /dev/null |sed 's/\..*//g'|sort > pres.txt
   basename -a $(cat get.seiga.all.txt)|sort > all.txt
-  comm -2 -3 all.txt pres.txt  | awk '{ print "http://seiga.nicovideo.jp/image/source/" $0 }' > get.seiga.all.txt
+  comm -2 -3 all.txt pres.txt  | awk '{ print "https://seiga.nicovideo.jp/image/source/" $0 }' > get.seiga.all.txt
 
   # Качаем
   if [ -s get.seiga.all.txt ]
