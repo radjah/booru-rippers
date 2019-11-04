@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Юзергаент
-uag="Mozilla/5.0 (Windows NT 6.3; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0"
+uag="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:70.0) Gecko/20100101 Firefox/70.0"
 
 athid=$1
 savedir=$2
