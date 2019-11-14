@@ -124,9 +124,21 @@ procanim () {
     cleantmp
     exit 6
   fi
-  # Получение ссылки
-  echo Downloading...
-  cat out.ugo|jq -r '.response[].metadata.zip_urls[]' |sed 's#_ugoira[^.]*#_ugoira1920x1080#g' | wget -nc -i - -O ${ugoid}_ugoira1920x1080.zip --referer="https://www.pixiv.net/"
+  # Получение файла
+  echo Trying to use local file...
+  accname=$(cat out.ugo | jq -r '.response[].user.account')
+  echo Found username: $accname
+  dirlet=$(echo -n $accname| tr "[:upper:]" "[:lower:]" | cut -c-1)
+  if [ -s $curdir/$dirlet/$accname/${ugoid}_ugoira1920x1080.zip ]
+  then
+    echo Found local file $curdir/$dirlet/$accname/${ugoid}_ugoira1920x1080.zip
+    echo Copying...
+    cp $curdir/$dirlet/$accname/${ugoid}_ugoira1920x1080.zip ./
+  else
+    echo Local file not found: $curdir/$dirlet/$accname/${ugoid}_ugoira1920x1080.zip
+    echo Downloading...
+    cat out.ugo|jq -r '.response[].metadata.zip_urls[]' |sed 's#_ugoira[^.]*#_ugoira1920x1080#g' | wget -nc -i - -O ${ugoid}_ugoira1920x1080.zip --referer="https://www.pixiv.net/"
+  fi
   # Сохранение информации о времени кадров
   cat out.ugo|jq -Mc '{delay_msec: .response[].metadata.frames[].delay_msec}' > ${ugoid}_ugoira1920x1080.txt
 } # procanim
