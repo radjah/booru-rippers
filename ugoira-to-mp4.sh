@@ -26,6 +26,7 @@ then
   echo "Использование: $(basename $0) id_анимации формат"
   echo "Формат может быть:"
   echo "gif  - gif-анимация"
+  echo "webp - webp-анимация"
   echo "coub - mp4-файл с видео в формате x264."
   echo "       Понятен большинству плееров и редактору на сайте coub.com."
   echo "mkv  - mkv-файл с видео в формате x264 без специальной обработки."
@@ -193,6 +194,18 @@ convertugo () {
           $convcmd -layers Optimize gif:$outfile
           convret=$?
           ;;
+        webp)
+          echo to webp...
+          outfile=$curdir/${ugoid}.webp
+          # генерация команды
+          convcmd="img2webp -lossy -loop 0 "
+          for i in ${!arrfile[@]}
+          do
+            convcmd="$convcmd -d ${arrdelay[i]}x1000 ${arrfile[i]} "
+          done;
+          $convcmd -o $outfile
+          convret=$?
+          ;;
         coub)
           echo to coub-mp4...
           outfile=$curdir/${ugoid}.coub.mp4
@@ -249,12 +262,14 @@ case $outformat in
   gif)
     checkapp convert
     ;;
+  webp)
+    checkapp img2webp
+    ;;
   *)
     checkapp ffmpeg
     checkapp mkvmerge
     ;;
 esac
-
 
 checkparam
 checkcfg
