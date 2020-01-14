@@ -27,6 +27,7 @@ then
   echo "Формат может быть:"
   echo "gif  - gif-анимация"
   echo "webp - webp-анимация"
+  echo "apng - анимированный png-файл"
   echo "coub - mp4-файл с видео в формате x264."
   echo "       Понятен большинству плееров и редактору на сайте coub.com."
   echo "mkv  - mkv-файл с видео в формате x264 без специальной обработки."
@@ -206,6 +207,30 @@ convertugo () {
           $convcmd -o $outfile
           convret=$?
           ;;
+        apng)
+          echo to apng...
+          outfile=$curdir/${ugoid}.png
+          mkdir ../png
+          if [ -d ../png ]
+          then
+            cd ../png
+          else
+            echo Не удалось создать $tmpdir/png!
+            exit 6
+          fi
+          # конвертирование jpg в png
+          mogrify -path . -format png ../files/*.jpg
+          # удаление расширения из имени файлов
+          arrfile=($(echo ${arrfile[@]} | sed -r 's/\.[a-zA-Z]+//g'))
+          # запись контрольных файлов с задержками кадров
+          for i in ${!arrdelay[@]}
+          do
+            echo delay=${arrdelay[i]}/1000 > ${arrfile[i]}.txt
+          done;
+          # сборка apng
+          apngasm $outfile *.png
+          convret=$?
+          ;;
         coub)
           echo to coub-mp4...
           outfile=$curdir/${ugoid}.coub.mp4
@@ -264,6 +289,10 @@ case $outformat in
     ;;
   webp)
     checkapp img2webp
+    ;;
+  apng)
+    checkapp mogrify
+    checkapp apngasm
     ;;
   *)
     checkapp ffmpeg
