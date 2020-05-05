@@ -199,7 +199,7 @@ convertugo () {
           echo to webp...
           outfile=$curdir/${ugoid}.webp
           # генерация команды
-          convcmd="img2webp -lossy -loop 0 "
+          convcmd="img2webp -lossy -q 85 -loop 0 "
           for i in ${!arrfile[@]}
           do
             convcmd="$convcmd -d ${arrdelay[i]}x1000 ${arrfile[i]} "
@@ -282,6 +282,7 @@ cleantmp () {
 
 checkapp curl
 checkapp wget
+checkapp unzip
 checkapp jq
 case $outformat in
   gif)
