@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # Переменные
-uag="PixivAndroidApp/5.0.156 (Android 9; ONEPLUS A6013)"
+#uag="PixivAndroidApp/5.0.156 (Android 9; ONEPLUS A6013)"
+uag="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:81.0) Gecko/20100101 Firefox/81.0"
 client_id="MOBrBDS8blbauoSck0ZfDbtuzpyT"
 client_secret="lsACyCD94FhDUtGTXi3QzcFE2uU1hqtDaKeqrdwj"
 hash_secret="28c1fdd170a5204386cb1313c7077b34f83e4aaf4aa829ce78c231e05b0bae2c"
