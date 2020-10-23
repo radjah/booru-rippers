@@ -1,8 +1,7 @@
 #!/bin/bash
 
 # Переменные
-# uag="PixivAndroidApp/5.0.156 (Android 9; ONEPLUS A6013)"
-uag="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:81.0) Gecko/20100101 Firefox/81.0"
+uag="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:82.0) Gecko/20100101 Firefox/82.0"
 client_id="MOBrBDS8blbauoSck0ZfDbtuzpyT"
 client_secret="lsACyCD94FhDUtGTXi3QzcFE2uU1hqtDaKeqrdwj"
 hash_secret="28c1fdd170a5204386cb1313c7077b34f83e4aaf4aa829ce78c231e05b0bae2c"
@@ -96,15 +95,18 @@ gensc () {
 # логинимся (access_token в AUTH, refresh_token в AUTHREF)
 pixlogin () {
   echo -n Logging in...
-  DTH=$(date --iso-8601=seconds)
+  DTH=$(date -u --iso-8601=seconds)
   DTHASH=$(echo -n $DTH$hash_secret | md5sum | cut -d' ' -f 1)
-  AUTHJS=$(curl --compressed -k -s -H "Accept-Language: en_US" \
-                              -H "X-Client-Time: $DTH" \
-                              -H "X-Client-Hash: $DTHASH" \
-                              -H "app-os: android" \
-                              -H "app-os-version: 5.0.156" \
+  AUTHJS=$(curl --compressed -k -s \
+                                    -H "App-OS: ios" \
+                                    -H "App-OS-Version: 10.3.1" \
+                                    -H "App-Version: 6.7.1" \
+                                    -H "User-Agent: PixivIOSApp/6.7.1 (iOS 10.3.1; iPhone8,1)" \
+                                    -H "Referer: https://app-api.pixiv.net/" \
+                                    -H "X-Client-Time: $DTH" \
+                                    -H "X-Client-Hash: $DTHASH" \
   --data "get_secure_url=true&client_id=${client_id}&client_secret=${client_secret}&grant_type=password&username=${pixid}&password=${pixpass}" \
-  https://oauth.secure.pixiv.net/auth/token -A "$uag")
+  "https://oauth.secure.pixiv.net/auth/token")
   AUTH=$(echo $AUTHJS | jq -r ".response.access_token")
   AUTHREF=$(echo $AUTHJS | jq -r ".response.refresh_token")
   AUTHDEV=$(echo $AUTHJS | jq -r ".response.device_token")
@@ -125,15 +127,18 @@ refreshlogin () {
   if [ -f ~/.config/pixivtoken.conf ]
   then
     . ~/.config/pixivtoken.conf
-    DTH=$(date --iso-8601=seconds)
+    DTH=$(date -u --iso-8601=seconds)
     DTHASH=$(echo -n $DTH$hash_secret | md5sum | cut -d' ' -f 1)
-    AUTHJS=$(curl --compressed -k -s -H "Accept-Language: en_US" \
+    AUTHJS=$(curl --compressed -k -s \
+                                    -H "App-OS: ios" \
+                                    -H "App-OS-Version: 10.3.1" \
+                                    -H "App-Version: 6.7.1" \
+                                    -H "User-Agent: PixivIOSApp/6.7.1 (iOS 10.3.1; iPhone8,1)" \
+                                    -H "Referer: https://app-api.pixiv.net/" \
                                     -H "X-Client-Time: $DTH" \
                                     -H "X-Client-Hash: $DTHASH" \
-                                    -H "app-os: android" \
-                                    -H "app-os-version: 5.0.156" \
     --data "get_secure_url=true&client_id=${client_id}&client_secret=${client_secret}&grant_type=refresh_token&refresh_token=$AUTHREF" \
-    https://oauth.secure.pixiv.net/auth/token -A "$uag")
+    "https://oauth.secure.pixiv.net/auth/token")
     AUTH=$(echo $AUTHJS | jq -r ".response.access_token")
     AUTHREF=$(echo $AUTHJS | jq -r ".response.refresh_token")
     # Проверка логина
