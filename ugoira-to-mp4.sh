@@ -54,15 +54,18 @@ checkcfg () {
 # логинимся (access_token в AUTH, refresh_token в AUTHREF)
 pixlogin () {
   echo -n Logging in...
-  DTH=$(date --iso-8601=seconds)
+  DTH=$(date -u --iso-8601=seconds)
   DTHASH=$(echo -n $DTH$hash_secret | md5sum | cut -d' ' -f 1)
-  AUTHJS=$(curl --compressed -k -s -H "Accept-Language: en_US" \
-                              -H "X-Client-Time: $DTH" \
-                              -H "X-Client-Hash: $DTHASH" \
-                              -H "app-os: android" \
-                              -H "app-os-version: 5.0.156" \
+  AUTHJS=$(curl --compressed -k -s \
+                                    -H "App-OS: ios" \
+                                    -H "App-OS-Version: 10.3.1" \
+                                    -H "App-Version: 6.7.1" \
+                                    -H "User-Agent: PixivIOSApp/6.7.1 (iOS 10.3.1; iPhone8,1)" \
+                                    -H "Referer: https://app-api.pixiv.net/" \
+                                    -H "X-Client-Time: $DTH" \
+                                    -H "X-Client-Hash: $DTHASH" \
   --data "get_secure_url=true&client_id=${client_id}&client_secret=${client_secret}&grant_type=password&username=${pixid}&password=${pixpass}" \
-  https://oauth.secure.pixiv.net/auth/token -A "$uag")
+  "https://oauth.secure.pixiv.net/auth/token" )
   AUTH=$(echo $AUTHJS | jq -r ".response.access_token")
   AUTHREF=$(echo $AUTHJS | jq -r ".response.refresh_token")
   AUTHDEV=$(echo $AUTHJS | jq -r ".response.device_token")
@@ -83,15 +86,18 @@ refreshlogin () {
   if [ -f ~/.config/pixivtoken.conf ]
   then
     . ~/.config/pixivtoken.conf
-    DTH=$(date --iso-8601=seconds)
+    DTH=$(date -u --iso-8601=seconds)
     DTHASH=$(echo -n $DTH$hash_secret | md5sum | cut -d' ' -f 1)
-    AUTHJS=$(curl --compressed -k -s -H "Accept-Language: en_US" \
+    AUTHJS=$(curl --compressed -k -s \
+                                    -H "App-OS: ios" \
+                                    -H "App-OS-Version: 10.3.1" \
+                                    -H "App-Version: 6.7.1" \
+                                    -H "User-Agent: PixivIOSApp/6.7.1 (iOS 10.3.1; iPhone8,1)" \
+                                    -H "Referer: https://app-api.pixiv.net/" \
                                     -H "X-Client-Time: $DTH" \
                                     -H "X-Client-Hash: $DTHASH" \
-                                    -H "app-os: android" \
-                                    -H "app-os-version: 5.0.156" \
     --data "get_secure_url=true&client_id=${client_id}&client_secret=${client_secret}&grant_type=refresh_token&refresh_token=$AUTHREF" \
-    https://oauth.secure.pixiv.net/auth/token -A "$uag")
+    "https://oauth.secure.pixiv.net/auth/token")
     AUTH=$(echo $AUTHJS | jq -r ".response.access_token")
     AUTHREF=$(echo $AUTHJS | jq -r ".response.refresh_token")
     # Проверка логина
