@@ -32,6 +32,7 @@ then
   echo "coub - mp4-файл с видео в формате x264."
   echo "       Понятен большинству плееров и редактору на сайте coub.com."
   echo "mkv  - mkv-файл с видео в формате x264 без специальной обработки."
+  echo "webm - webm-файл с видео в формате vpx."
   echo "Если не указан, то mp4 без специальной обработки."
   exit 1
 fi
@@ -256,6 +257,14 @@ convertugo () {
           createtc
           ffmpeg -hide_banner -v warning -stats -y -framerate 15 -i '%06d.jpg' ../${ugoid}.tmp.mkv
           mkvmerge -o $outfile -q -A --timecodes 0:../timecodes.tc ../${ugoid}.tmp.mkv
+          convret=$?
+          ;;
+        webm)
+          echo to webm...
+          outfile=$curdir/${ugoid}.webm
+          createtc
+          ffmpeg -hide_banner -v warning -stats -y -framerate 15 -i '%06d.jpg' -c:v libvpx -crf 4 -b:v 5000k -an ../${ugoid}.tmp.webm
+          mkvmerge -o $outfile -q -A --webm --timecodes 0:../timecodes.tc ../${ugoid}.tmp.webm
           convret=$?
           ;;
         *)
