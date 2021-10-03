@@ -59,9 +59,9 @@ pixlogin () {
   DTHASH=$(echo -n $DTH$hash_secret | md5sum | cut -d' ' -f 1)
   AUTHJS=$(curl --compressed -k -s \
                                     -H "App-OS: ios" \
-                                    -H "App-OS-Version: 10.3.1" \
-                                    -H "App-Version: 6.7.1" \
-                                    -H "User-Agent: PixivIOSApp/6.7.1 (iOS 10.3.1; iPhone8,1)" \
+                                    -H "App-OS-Version: 13.1.2" \
+                                    -H "App-Version: 7.7.6" \
+                                    -H "User-Agent: PixivIOSApp/7.7.6 (iOS 13.1.2; iPhone11,8)" \
                                     -H "Referer: https://app-api.pixiv.net/" \
                                     -H "X-Client-Time: $DTH" \
                                     -H "X-Client-Hash: $DTHASH" \
@@ -91,9 +91,9 @@ refreshlogin () {
     DTHASH=$(echo -n $DTH$hash_secret | md5sum | cut -d' ' -f 1)
     AUTHJS=$(curl --compressed -k -s \
                                     -H "App-OS: ios" \
-                                    -H "App-OS-Version: 10.3.1" \
-                                    -H "App-Version: 6.7.1" \
-                                    -H "User-Agent: PixivIOSApp/6.7.1 (iOS 10.3.1; iPhone8,1)" \
+                                    -H "App-OS-Version: 13.1.2" \
+                                    -H "App-Version: 7.7.6" \
+                                    -H "User-Agent: PixivIOSApp/7.7.6 (iOS 13.1.2; iPhone11,8)" \
                                     -H "Referer: https://app-api.pixiv.net/" \
                                     -H "X-Client-Time: $DTH" \
                                     -H "X-Client-Hash: $DTHASH" \
@@ -120,12 +120,12 @@ refreshlogin () {
 
 procanim () {
   # Получение страницы
-  curl --compressed -# "https://public-api.secure.pixiv.net/v1/works/$ugoid.json?image_sizes=large" -H "Authorization: Bearer $AUTH" -A "$uag" > out.ugo
+  curl --compressed -# "https://app-api.pixiv.net/v1/illust/detail?illust_id=$ugoid&lang=en" -H "Authorization: Bearer $AUTH" -A "$uag" > out.ugo
   # Проверка типа
-  posttype=$(cat out.ugo| jq 'select(.status == "success" )' | jq -r '.response[].type')
-  if [[ $posttype != "ugoira" ]]
+  posttype=$(cat out.ugo | jq -r '.illust.type')
+  if [[ "$posttype" != "ugoira" ]]
   then
-    if [ -z $posttype ]
+    if [ "$posttype" = "null" ]
     then
       echo Пост с ID $ugoid не найден!
     else
@@ -134,9 +134,12 @@ procanim () {
     cleantmp
     exit 6
   fi
+
   # Получение файла
+  # Получение информации с сервера
+  curl --compressed -# "https://app-api.pixiv.net/v1/ugoira/metadata?illust_id=$ugoid&lang=en" -H "Authorization: Bearer $AUTH" -A "$uag" > out.meta.ugo
   echo Trying to use local file...
-  accname=$(cat out.ugo | jq -r '.response[].user.account')
+  accname=$(cat out.ugo | jq -r '.illust.user.account')
   echo Found username: $accname
   dirlet=$(echo -n $accname| tr "[:upper:]" "[:lower:]" | cut -c-1)
   if [ -s $curdir/$dirlet/$accname/${ugoid}_ugoira1920x1080.zip ]
@@ -147,10 +150,10 @@ procanim () {
   else
     echo Local file not found: $curdir/$dirlet/$accname/${ugoid}_ugoira1920x1080.zip
     echo Downloading...
-    cat out.ugo|jq -r '.response[].metadata.zip_urls[]' |sed 's#_ugoira[^.]*#_ugoira1920x1080#g' | wget -nc -i - -O ${ugoid}_ugoira1920x1080.zip --referer="https://www.pixiv.net/"
+    cat out.meta.ugo|jq -r '.ugoira_metadata.zip_urls.medium' |sed 's#_ugoira[^.]*#_ugoira1920x1080#g' | wget -nc -i - -O ${ugoid}_ugoira1920x1080.zip --referer="https://www.pixiv.net/"
   fi
   # Сохранение информации о времени кадров
-  cat out.ugo|jq -Mc '{delay_msec: .response[].metadata.frames[].delay_msec}' > ${ugoid}_ugoira1920x1080.txt
+  cat out.meta.ugo | jq -Mc '{delay_msec: .ugoira_metadata.frames[].delay}' > ${ugoid}_ugoira1920x1080.txt
 } # procanim
 
 # генерация файла таймкодов
