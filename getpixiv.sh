@@ -164,53 +164,46 @@ getaccname() {
 getlist () {
 
 # счетчики
+picoffset=0
 picnum=1
 pagenum=1
 
 # пустые файлы
-touch get.pixiv.illist.txt get.pixiv.anim.txt
+touch get.pixiv.anim.txt
 
 # перебор страниц
 until [ $picnum -eq 0 ]
 do
   # страница для парсинга во временный файл
-  echo Page $pagenum
-  curl --compressed -# "https://public-api.secure.pixiv.net/v1/users/$athid/works.json?image_sizes=large&page=$pagenum&per_page=100" -H "Authorization: Bearer $AUTH" > tmp.json.pixiv.txt
-  # Сколько нашли на текущей странице?
-  picnum=$(cat tmp.json.pixiv.txt|jq '. | select(.status == "success") | .response[].id' |wc -l)
+  echo Offset $picoffset
+  curl --compressed -# "https://app-api.pixiv.net/v1/user/illusts?user_id=$athid&offset=$picoffset" \
+                                     -H "App-OS: ios" \
+                                     -H "App-OS-Version: 10.3.1" \
+                                     -H "App-Version: 6.7.1" \
+                                     -H "User-Agent: PixivIOSApp/6.7.1 (iOS 10.3.1; iPhone8,1)" \
+                                     -H "Referer: https://app-api.pixiv.net/" \
+                                     -H "Authorization: Bearer $AUTH" > tmp.json.pixiv.txt
+  # Сколько постов нашли?
+  picnum=$(cat tmp.json.pixiv.txt | jq '.illusts | length')
+  # Разгребаем полученное
   if [ $picnum \> 0 ]
   then
     # парсим
-    # иллюстрации сразу в список для закачки
-    cat tmp.json.pixiv.txt|jq -r '.response[] | select(.is_manga == false) | select(.type != "ugoira")|.image_urls.large' >> get.pixiv.dl.txt
-    # id альбомов для дальнейшей обработки в отдельный список
-    cat tmp.json.pixiv.txt|jq -r '.response[] | select(.is_manga == true) | select(.type != "ugoira")|.id' >> get.pixiv.illist.txt
+    # одиночные иллюстрации
+    cat tmp.json.pixiv.txt | jq -r '.illusts[] | select(.type != "ugoira")  | select(.page_count == 1) | .meta_single_page.original_image_url' >> get.pixiv.dl.txt
+    # альбомы 
+    cat tmp.json.pixiv.txt | jq -r '.illusts[] | select(.type != "ugoira")  | select(.page_count > 1) | .meta_pages[].image_urls.original' >> get.pixiv.dl.txt
     # id анимации для дальнейшей обработки в отдельный список
-    cat tmp.json.pixiv.txt|jq -r '.response[] | select(.type == "ugoira")|.id' >> get.pixiv.anim.txt
-    pagenum=$(expr $pagenum + 1)
+    cat tmp.json.pixiv.txt | jq -r '.illusts[] | select(.type == "ugoira") | .id' >> get.pixiv.anim.txt
+    picoffset=$(expr $picoffset + 30)
   fi
 done;
-
-} # getlist
-
-########################
-# Илюстрации и альбомы #
-########################
-
-procillist () {
-  touch get.pixiv.dl.txt
-  # Обрабатываем все найденные ID
-  for i in $(cat get.pixiv.illist.txt)
-  do
-    echo Processing $i...
-    curl --compressed -# "https://public-api.secure.pixiv.net/v1/works/$i.json?image_sizes=large" -H "Authorization: Bearer $AUTH"|jq -r ".response[].metadata.pages[].image_urls.large" >> get.pixiv.dl.txt
-  done;
   # Скачивание
   if [ -s get.pixiv.dl.txt ]
   then
     $dldr -i get.pixiv.dl.txt --referer="https://www.pixiv.net/"
   fi
-} # procillist
+} # getlist
 
 ######################
 # Архивы с анимацией #
@@ -223,11 +216,11 @@ then
   for i in $(cat get.pixiv.anim.txt)
   do
     # Получение страницы
-    curl --compressed -# "https://public-api.secure.pixiv.net/v1/works/$i.json?image_sizes=large" -H "Authorization: Bearer $AUTH" -A "$uag" > out.ugo
+    curl --compressed -# "https://app-api.pixiv.net/v1/ugoira/metadata?illust_id=$i" -H "Authorization: Bearer $AUTH" -A "$uag" > out.ugo
     # Получение ссылки
-    cat out.ugo|jq -r '.response[].metadata.zip_urls[]' |sed 's#_ugoira[^.]*#_ugoira1920x1080#g' >> get.pixiv.anim.dl.txt
+    cat out.ugo | jq -r '.ugoira_metadata.zip_urls.medium' | sed 's#_ugoira[^.]*#_ugoira1920x1080#g' >> get.pixiv.anim.dl.txt
     # Сохранение информации о времени кадров
-    cat out.ugo|jq -Mc '{delay_msec: .response[].metadata.frames[].delay_msec}' > ${i}_ugoira1920x1080.txt
+    cat out.ugo | jq -Mc '{delay_msec: .ugoira_metadata.frames[].delay}' > ${i}_ugoira1920x1080.txt
   done;
 fi
 
@@ -275,8 +268,6 @@ then
     gensc
     echo [*] Building list...
     getlist
-    echo [*] Processing illust and albums list...
-    procillist
     refreshlogin
     echo [*] Processing animation list...
     procanim
