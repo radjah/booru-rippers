@@ -75,6 +75,10 @@ do
   then
     cat tmp.sankaku.txt >> get.sankaku.txt
     pagenum=$(expr $pagenum + 1)
+
+    aria2c --remote-time --auto-file-renaming=false -j3 -i tmp.sankaku.txt \
+    --allow-overwrite=true \
+    --conditional-get=true -c -m20 --retry-wait=10
   fi
 done;
 
@@ -89,8 +93,6 @@ then
 else
   echo По сочетанию "$tags" найдено постов: $postcount
 fi
-
-aria2c --allow-overwrite=true --auto-file-renaming=false --conditional-get=true --remote-time -x10 -s10 -i get.sankaku.txt
 
 # убираем за собой
 rm -f tmp.sankaku.txt 2> /dev/null
