@@ -48,12 +48,12 @@ then
   rm -f get2.gelbooru.txt
 fi
 
-pcount=$(expr $postcount / 1000)
+pcount=$(expr $postcount / 100)
 
 for ((i=0; i<=$pcount; i++))
 do
   echo Page $i
-  curl --compressed -# "https://gelbooru.com/index.php?page=dapi&s=post&q=index&tags=$tags&limit=1000&pid=$i" -A "$uag"|pcregrep --buffer-size=16M -o -e 'file_url\>[^\<]+'|sed -e 's#file_url>##g' >>get2.gelbooru.txt
+  curl --compressed -# "https://gelbooru.com/index.php?page=dapi&s=post&q=index&tags=$tags&limit=100&pid=$i" -A "$uag"|pcregrep --buffer-size=16M -o -e 'file_url\>[^\<]+'|sed -e 's#file_url>##g' >>get2.gelbooru.txt
 done;
 
 wget -nc -i get2.gelbooru.txt --referer="https://gelbooru.com/" --no-check-certificate
