@@ -44,7 +44,7 @@ fi
 
 # логинимся
 echo -n Logging in...
-AUTH=$(curl -s "https://capi-v2.sankakucomplex.com/auth/token?lang=english" -d "{\"login\":\"${sanlogin}\",\"password\":\"${sanpass}\"}" -A "$uag" -H "Content-Type: application/json"| jq -r "select(.success=="true") | .access_token")
+AUTH=$(curl -s "https://capi-v2.sankakucomplex.com/auth/token?lang=english" -d "{\"login\":\"${sanlogin}\",\"password\":\"${sanpass}\"}" -H "Accept: application/vnd.sankaku.api+json;v=2" -A "$uag" -H "Content-Type: application/json"| jq -r "select(.success=="true") | .access_token")
 
 # Проверка логина
 if [ -z $AUTH ]
