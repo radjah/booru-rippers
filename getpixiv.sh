@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Переменные
-uag="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:82.0) Gecko/20100101 Firefox/82.0"
+uag="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/109.0"
 client_id="MOBrBDS8blbauoSck0ZfDbtuzpyT"
 client_secret="lsACyCD94FhDUtGTXi3QzcFE2uU1hqtDaKeqrdwj"
 hash_secret="28c1fdd170a5204386cb1313c7077b34f83e4aaf4aa829ce78c231e05b0bae2c"
@@ -89,7 +89,7 @@ finddups () {
 gensc () {
   # ярлык на страницу автора для общей кучи
   echo \[InternetShortcut\] > "$savedir.url"
-  echo URL=https\:\/\/www.pixiv.net\/member_illust.php\?id=$athid >> "$savedir.url"
+  echo URL=https\:\/\/www\.pixiv\.net\/en\/users\/${athid}\/artworks >> "$savedir.url"
 } # gensc
 
 # логинимся (access_token в AUTH, refresh_token в AUTHREF)
@@ -99,9 +99,9 @@ pixlogin () {
   DTHASH=$(echo -n $DTH$hash_secret | md5sum | cut -d' ' -f 1)
   AUTHJS=$(curl --compressed -k -s \
                                     -H "App-OS: ios" \
-                                    -H "App-OS-Version: 10.3.1" \
-                                    -H "App-Version: 6.7.1" \
-                                    -H "User-Agent: PixivIOSApp/6.7.1 (iOS 10.3.1; iPhone8,1)" \
+                                    -H "App-OS-Version: 13.1.2" \
+                                    -H "App-Version: 7.7.6" \
+                                    -H "User-Agent: PixivIOSApp/7.7.6 (iOS 13.1.2; iPhone11,8)" \
                                     -H "Referer: https://app-api.pixiv.net/" \
                                     -H "X-Client-Time: $DTH" \
                                     -H "X-Client-Hash: $DTHASH" \
@@ -131,9 +131,9 @@ refreshlogin () {
     DTHASH=$(echo -n $DTH$hash_secret | md5sum | cut -d' ' -f 1)
     AUTHJS=$(curl --compressed -k -s \
                                     -H "App-OS: ios" \
-                                    -H "App-OS-Version: 10.3.1" \
-                                    -H "App-Version: 6.7.1" \
-                                    -H "User-Agent: PixivIOSApp/6.7.1 (iOS 10.3.1; iPhone8,1)" \
+                                    -H "App-OS-Version: 13.1.2" \
+                                    -H "App-Version: 7.7.6" \
+                                    -H "User-Agent: PixivIOSApp/7.7.6 (iOS 13.1.2; iPhone11,8)" \
                                     -H "Referer: https://app-api.pixiv.net/" \
                                     -H "X-Client-Time: $DTH" \
                                     -H "X-Client-Hash: $DTHASH" \
@@ -186,7 +186,7 @@ do
   # Сколько постов нашли?
   picnum=$(cat tmp.json.pixiv.txt | jq '.illusts | length')
   # Разгребаем полученное
-  if [ $picnum \> 0 ]
+  if [ $picnum -gt 0 ]
   then
     # парсим
     # одиночные иллюстрации
@@ -215,12 +215,30 @@ if [ -s get.pixiv.anim.txt ]
 then
   for i in $(cat get.pixiv.anim.txt)
   do
-    # Получение страницы
-    curl --compressed -# "https://app-api.pixiv.net/v1/ugoira/metadata?illust_id=$i" -H "Authorization: Bearer $AUTH" -A "$uag" > out.ugo
+    # взвод ошибки
+    errval=1
+    until [ $errval -eq 0 ]
+    do
+      curl --compressed -# "https://app-api.pixiv.net/v1/ugoira/metadata?illust_id=$i" \
+                                     -H "App-OS: ios" \
+                                     -H "App-OS-Version: 10.3.1" \
+                                     -H "App-Version: 6.7.1" \
+                                     -H "User-Agent: PixivIOSApp/6.7.1 (iOS 10.3.1; iPhone8,1)" \
+                                     -H "Referer: https://app-api.pixiv.net/" \
+                                     -H "Authorization: Bearer $AUTH" -A "$uag" > out.${i}.ugo
+      # проверка на наличие ошибки
+      # обычно Rate Limit
+      errval=$(cat out.${i}.ugo | jq -r '.error | length')
+      if [ $errval -gt 0 ]
+      then
+        echo Rate Limit! Waiting 15 sec...
+        sleep 15
+      fi
+    done;
     # Получение ссылки
-    cat out.ugo | jq -r '.ugoira_metadata.zip_urls.medium' | sed 's#_ugoira[^.]*#_ugoira1920x1080#g' >> get.pixiv.anim.dl.txt
+    cat out.${i}.ugo | jq -r '.ugoira_metadata.zip_urls.medium' | sed 's#_ugoira[^.]*#_ugoira1920x1080#g' >> get.pixiv.anim.dl.txt
     # Сохранение информации о времени кадров
-    cat out.ugo | jq -Mc '{delay_msec: .ugoira_metadata.frames[].delay}' > ${i}_ugoira1920x1080.txt
+    cat out.${i}.ugo | jq -Mc '{delay_msec: .ugoira_metadata.frames[].delay}' > ${i}_ugoira1920x1080.txt
   done;
 fi
 
