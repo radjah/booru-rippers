@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Юзергаент
-uag="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:70.0) Gecko/20100101 Firefox/70.0"
+uag="booru-rippers v0.1 by Radjah"
 
 # Проверка параметров
 if [ ! "$2" = "" ]
@@ -29,19 +29,19 @@ fi
 echo Entering $savedir...
 cd "$savedir"
 
-# Количество постов
-postcount=`curl -# "https://e621.net/post/index.xml?tags=$tags&limit=1" -A "$uag"|pcregrep -o 'posts\ count=\"[^"]+'|sed -e 's/posts\ count=//' -e 's/\"//'`
-echo $postcount posts
-
-# Проверка количетсва
-if [ $postcount -eq 0 ]
+# Получение логина и пароля
+if [ -f ~/.config/boorulogins.conf ]
 then
-  echo По сочетанию "$tags" ничего не найдено.
-  rm -f tmp.e621.txt 2> /dev/null
-  exit 3
+  . ~/.config/boorulogins.conf
 else
-  echo По сочетанию "$tags" найдено постов: $postcount
+  echo Файл с данными для авторизации не найден!
+  echo Создайте файл ~/.config/boorulogins.conf и поместите в него следующие строки:
+  echo e621login=ВАШ ЛОГИН
+  echo e621api=ВАШ API-КЛЮЧ
+  echo API-ключ получается на странице профиля
+  exit 5
 fi
+
 
 # Удаление файла-списка
 if [ -s get.e621.txt ]
@@ -57,7 +57,9 @@ until [ $picnum -eq 0 ]
 do
   # Получение списка
   echo Page $pagenum
-  curl -# "https://e621.net/post/index.xml?tags=$tags&limit=100&page=$pagenum" -A "$uag"|pcregrep -o -e '<file_url>.*<\/file_url>'|sed -e 's#<file_url>##g' -e 's#</file_url>##g' > tmp.e621.txt
+  curl -# --compressed "https://e621.net/posts.json?tags=$tags&limit=320&page=$pagenum" -A "$uag" -u $e621login:$e621api | jq -r .posts[].file.url > tmp.e621.txt
+  # Чтобы не получить 503 из-за частого опроса
+  sleep 1
   picnum=$(cat tmp.e621.txt|wc -l)
   if [ $picnum \> 0 ]
   then
@@ -65,6 +67,18 @@ do
     pagenum=$(expr $pagenum + 1)
   fi
 done;
+
+# Проверка количества
+postcount=$(cat get.e621.txt|wc -l)
+
+if [ $postcount -eq 0 ]
+then
+  echo По сочетанию "$tags" ничего не найдено.
+  rm -f tmp.e621.txt
+  exit 3
+else
+  echo По сочетанию "$tags" найдено постов: $postcount
+fi
 
 wget --no-check-certificate -nc -i get.e621.txt
 
