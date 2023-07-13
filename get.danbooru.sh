@@ -65,7 +65,7 @@ do
   fi
 done;
 
-# Проверка количетсва
+# Проверка количества
 postcount=$(cat get.danbooru.txt|wc -l)
 
 if [ $postcount -eq 0 ]

@@ -66,7 +66,7 @@ do
   sleep 2
 done;
 
-# Проверка количетсва и загрузка
+# Проверка количества и загрузка
 postcount=$(cat get.wallhaven.txt|wc -l)
 
 if [ $postcount -eq 0 ]

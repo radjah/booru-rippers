@@ -82,7 +82,7 @@ do
   fi
 done;
 
-# Проверка количетсва
+# Проверка количества
 postcount=$(cat get.sankaku.txt|wc -l)
 
 if [ $postcount -eq 0 ]

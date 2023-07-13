@@ -32,7 +32,7 @@ cd "$savedir"
 # Количество постов
 postcount=`curl --compressed -# "https://xbooru.com/index.php?page=dapi&s=post&q=index&tags=$tags&limit=1" -A "$uag"|pcregrep -o 'count=\"[^"]+'|sed -e 's/count=//' -e 's/\"//'`
 
-# Проверка количетсва
+# Проверка количества
 if [ $postcount -eq 0 ]
 then
   echo По сочетанию "$tags" ничего не найдено.

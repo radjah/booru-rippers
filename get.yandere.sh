@@ -31,7 +31,7 @@ cd "$savedir"
 
 postcount=$(curl -k -# "https://yande.re/post/index.xml?tags=$1&limit=1" -A "$uag"|pcregrep -o 'posts\ count=\"[^"]+'|sed -e 's/posts\ count=//' -e 's/\"//')
 
-# Проверка количетсва
+# Проверка количества
 if [ $postcount -eq 0 ]
 then
   echo По сочетанию "$tags" ничего не найдено.

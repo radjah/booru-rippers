@@ -32,7 +32,7 @@ cd "$savedir"
 # Количество постов
 postcount=$(curl -# "https://konachan.com/post/index.xml?tags=$tags&limit=1" -A "$uag"|pcregrep -o 'posts\ count=\"[^"]+'|sed -e 's/posts\ count=//' -e 's/\"//')
 
-# Проверка количетсва
+# Проверка количества
 if [ $postcount -eq 0 ]
 then
   echo По сочетанию "$tags" ничего не найдено.
