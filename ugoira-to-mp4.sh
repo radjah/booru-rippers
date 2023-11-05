@@ -251,7 +251,7 @@ convertugo () {
           # запись таймкодов в файл
           mkvmerge -o ../${ugoid}.mkv -q -A --timecodes 0:../timecodes.tc ../${ugoid}.tmp.mkv
           # преобразование mkv в vfr mp4
-          ffmpeg -hide_banner -v warning -y -vsync 2 -c:v copy $outfile -i ../${ugoid}.mkv
+          ffmpeg -hide_banner -v warning -y -fps_mode 2 -c:v copy $outfile -i ../${ugoid}.mkv
           convret=$?
           ;;
         mkv)
@@ -276,7 +276,7 @@ convertugo () {
           createtc
           ffmpeg -hide_banner -v warning -stats -y -framerate 15 -i '%06d.jpg' ../${ugoid}.tmp.mp4
           mkvmerge -o ../${ugoid}.mkv -q -A --timecodes 0:../timecodes.tc ../${ugoid}.tmp.mp4
-          ffmpeg -hide_banner -v warning -y -vsync 2 -c:v copy $outfile -i ../${ugoid}.mkv
+          ffmpeg -hide_banner -v warning -y -fps_mode 2 -c:v copy $outfile -i ../${ugoid}.mkv
           convret=$?
           ;;
       esac
