@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Юзергаент
-uag="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:70.0) Gecko/20100101 Firefox/70.0"
+uag="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:143.0) Gecko/20100101 Firefox/143.0"
 
 # Проверка параметров
 if [ ! "$2" = "" ]
@@ -44,7 +44,7 @@ fi
 
 # логинимся
 echo -n Logging in...
-AUTH=$(curl -s "https://capi-v2.sankakucomplex.com/auth/token?lang=english" -d "{\"login\":\"${sanlogin}\",\"password\":\"${sanpass}\"}" -H "Accept: application/vnd.sankaku.api+json;v=2" -A "$uag" -H "Content-Type: application/json"| jq -r "select(.success=="true") | .access_token")
+AUTH=$(curl -s "https://sankakuapi.com/auth/token?lang=english" -d "{\"login\":\"${sanlogin}\",\"password\":\"${sanpass}\"}" -H "Accept: application/vnd.sankaku.api+json;v=2" -A "$uag" -H "Content-Type: application/json"| jq -r "select(.success=="true") | .access_token")
 
 # Проверка логина
 if [ -z $AUTH ]
@@ -69,7 +69,7 @@ until [ $picnum -eq 0 ]
 do
   # Получение списка
   echo Page $pagenum
-  curl -# --compressed -A "$uag" "https://capi-v2.sankakucomplex.com/posts?tags=$tags&page=$pagenum&limit=100" -H "Authorization: Bearer $AUTH" | jq -r ".[].file_url" > tmp.sankaku.txt
+  curl -# --compressed -A "$uag" "https://sankakuapi.com/posts?tags=$tags&page=$pagenum&limit=100" -H "Authorization: Bearer $AUTH" | jq -r ".[].file_url" > tmp.sankaku.txt
   picnum=$(cat tmp.sankaku.txt|wc -l)
   if [ $picnum \> 0 ]
   then
